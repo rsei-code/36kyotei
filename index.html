@@ -37,11 +37,25 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .user #userName{margin-right:6px;padding:3px 10px;background:var(--surface-2);border-radius:999px;color:var(--ink)}
 .lnkbtn{border:none;background:none;color:var(--ink-2);font-size:12px;padding:3px 8px;text-decoration:underline;text-underline-offset:3px}
 .lnkbtn:hover{color:var(--accent);background:none}
-.monthNav{display:inline-flex;align-items:center;border:2px solid var(--accent);border-radius:10px;overflow:hidden;background:var(--surface)}
-.monthNav select{border:none;font-size:17px;font-weight:700;padding:6px 6px;color:var(--ink);cursor:pointer;background:transparent}
-.monthNav button{border:none;border-radius:0;background:var(--accent);color:#fff;font-size:13px;padding:9px 12px}
-.monthNav button:disabled{opacity:.35;cursor:default}
-.monthNav button:hover:not(:disabled){filter:brightness(1.1);background:var(--accent)}
+/* 部署・対象月の切替（同じ形に揃え、月は文字の大きさで目立たせる） */
+.ctl{display:inline-flex;align-items:stretch;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.ctl:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+.ctl:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.ctl .cap{display:flex;align-items:center;font-size:11px;color:var(--muted);padding:0 2px 0 12px;white-space:nowrap;letter-spacing:.04em}
+.ctl .sel{position:relative;display:flex}
+.ctl .sel::after{content:"";position:absolute;right:13px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--ink-2);border-bottom:1.5px solid var(--ink-2);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.ctl select{appearance:none;-webkit-appearance:none;border:none;border-radius:0;background:transparent;color:var(--ink);font:inherit;font-weight:600;padding:0 34px 0 8px;cursor:pointer;height:100%}
+.ctl select:focus{outline:none}
+.orgPick select{font-size:15px;max-width:300px;text-overflow:ellipsis}
+.monthNav select{font-size:17px;font-weight:700;padding-left:10px}
+.monthNav button{border:none;border-radius:0;background:transparent;color:var(--accent);font-size:20px;line-height:1;width:36px;padding:0 0 2px}
+.monthNav #mPrev{border-right:1px solid var(--grid)}
+.monthNav #mNext{border-left:1px solid var(--grid)}
+.monthNav button:hover:not(:disabled){background:var(--surface-2)}
+.monthNav button:disabled{color:var(--muted);opacity:.35;cursor:default}
+.loadInfo{margin-top:12px;font-size:12px;color:var(--ink-2)}
+.loadInfo b{color:var(--ink)}
+.loadInfo .gap{display:inline-block;margin-top:8px;text-align:left;border-left:4px solid var(--warning);background:var(--warning-bg);padding:6px 12px;border-radius:6px}
 #kpis{position:sticky;top:var(--hdr,110px);z-index:15;background:var(--page);padding:10px 0 8px;margin-top:-10px}
 .rows2{margin-top:4px}
 .rows2 div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.35}
@@ -208,12 +222,12 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
       <button data-mode="genba">現場管理者</button>
       <button data-mode="admin">人事・労務管理者</button>
     </div>
-    <label class="small genba-only">部署</label>
-    <select id="gOrg" class="genba-only" style="max-width:300px"></select>
-    <div class="monthNav" title="対象月">
-      <button id="mPrev" aria-label="前の月">◀</button>
-      <select id="monthSel" aria-label="対象月"></select>
-      <button id="mNext" aria-label="次の月">▶</button>
+    <label class="ctl orgPick genba-only"><span class="cap">部署</span><span class="sel"><select id="gOrg" aria-label="部署"></select></span></label>
+    <div class="ctl monthNav">
+      <span class="cap">対象月</span>
+      <button id="mPrev" aria-label="前の月" title="前の月">‹</button>
+      <span class="sel"><select id="monthSel" aria-label="対象月"></select></span>
+      <button id="mNext" aria-label="次の月" title="次の月">›</button>
     </div>
     <div class="spacer"></div>
     <button id="btnSettings" class="admin-only">設定</button>
@@ -227,7 +241,7 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
       <div><strong>日次勤務データCSVをここにドロップ</strong>、または <button class="primary" id="btnPick">ファイルを選択</button></div>
       <div class="small" style="margin-top:6px">複数月をまとめて登録できます（Shift-JIS / UTF-8 自動判定）。登録したデータはスプレッドシートに保存され、各現場管理者の画面に反映されます。日ごと・週ごと・月ごとのどれでも登録できます。登録済みの日付を含むファイルは、その日付の分だけ新しいデータで上書きされます（ほかの日のデータは残ります）。</div>
       <input type="file" id="file" accept=".csv,text/csv" multiple hidden>
-      <div class="chips" id="chips"></div>
+      <div class="loadInfo" id="loadInfo"></div>
     </div>
   </div>
 
@@ -559,7 +573,7 @@ const badge=l=>`<span class="badge ${LVL[l].cls}">${LVL[l].t}</span>`;
 // ---------- render ----------
 function render(){
   const months=Object.keys(store.months).sort();
-  $('#chips').innerHTML=months.map(k=>`<span class="chip">${mlabel(k)}<span class="small">（${store.months[k].maxDay||'?'}日まで）</span></span>`).join('');
+  renderLoadInfo(months);
   $('#gEmpty').classList.toggle('hidden',!!months.length);$('#gBody').classList.toggle('hidden',!months.length);
   if(!months.length){$('#app').classList.add('hidden');$('#monthSel').innerHTML='<option>—</option>';$('#gOrg').innerHTML='<option>—</option>';return}
   $('#app').classList.remove('hidden');
@@ -748,14 +762,36 @@ function renderAnnualAdmin(){
   $('#aCount').textContent=rows.filter(r=>!r.retired).length+' 名'+(rows.some(r=>r.retired)?`（ほか在籍なし ${rows.filter(r=>r.retired).length}名）`:'');
   $('#aAnnual').innerHTML=rows.length?annualHTML(rows):'<div class="empty">該当なし</div>';
 }
+// 登録済みデータのうち、いちばん新しい日付（例：2026年11月24日）
+function latestDataDate(){
+  const ms=Object.keys(store.months).sort();if(!ms.length)return null;
+  const k=ms[ms.length-1],d=store.months[k].maxDay;
+  return d?`${+k.slice(0,4)}年${+k.slice(5)}月${d}日`:null;
+}
 function renderDataInfo(){
-  const el=$('#dataInfo');
-  if(!lastUpdate){el.textContent='時間外・休日労働の上限チェック（データ未登録）';return}
-  const d=new Date(lastUpdate.at);const f=x=>`${x.getMonth()+1}/${x.getDate()} ${x.getHours()}:${String(x.getMinutes()).padStart(2,'0')}`;
-  const m=String(lastUpdate.fileName||'').match(/(20\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-  const exp=m?`${+m[2]}/${+m[3]} ${+m[4]}:${m[5]}`:null;
-  const to=lastUpdate.dataTo?`${+lastUpdate.dataTo.slice(5,7)}/${+lastUpdate.dataTo.slice(8,10)}`:'';
-  el.innerHTML=`最新データ：<b>${to}分まで</b>　／　${exp?`勤怠システム出力 ${exp}　／　`:''}登録 ${f(d)}`;
+  const el=$('#dataInfo'),ld=latestDataDate();
+  if(!ld){el.textContent='時間外・休日労働の上限チェック（データ未登録）';return}
+  el.innerHTML=`最新データ：<b>${ld}分まで</b>`;
+}
+// 人事画面のアップロード欄：最終アップロードの情報と、日付の抜け（あるときだけ）
+function renderLoadInfo(months){
+  const el=$('#loadInfo');
+  if(!months.length){el.innerHTML='まだデータは登録されていません。';return}
+  const parts=[];
+  if(lastUpdate&&lastUpdate.at){const x=new Date(lastUpdate.at);if(!isNaN(x))parts.push(`最終アップロード：<b>${x.getFullYear()}年${x.getMonth()+1}月${x.getDate()}日 ${x.getHours()}:${String(x.getMinutes()).padStart(2,'0')}</b>${lastUpdate.fileName?`（${esc(lastUpdate.fileName)}）`:''}`)}
+  const ld=latestDataDate();if(ld)parts.push(`データは <b>${ld}分まで</b>`);
+  // 抜けの検出：最初の月〜最新月のあいだで、未登録の月・日
+  const gaps=[],last=months[months.length-1];
+  for(let k=months[0];k<=last;k=addMonth(k,1)){
+    const M=store.months[k],mo=`${+k.slice(0,4)}年${+k.slice(5)}月`;
+    if(!M){gaps.push(`${mo}（全日）`);continue}
+    const end=k===last?M.maxDay:new Date(+k.slice(0,4),+k.slice(5),0).getDate();
+    const R=M.ranges||[];const has=d=>R.length?R.some(([f,t])=>d>=f&&d<=t):d<=M.maxDay;
+    const g=[];let st=null;
+    for(let d=1;d<=end+1;d++){const c=d>end||has(d);if(!c&&st==null)st=d;if(c&&st!=null){g.push(st===d-1?`${st}日`:`${st}〜${d-1}日`);st=null}}
+    if(g.length)gaps.push(`${mo} ${g.join('・')}`);
+  }
+  el.innerHTML=parts.join('　／　')+(gaps.length?`<div><div class="gap">⚠ 登録されていない日があります：${esc(gaps.join('、'))}</div></div>`:'');
 }
 
 // ---------- detail ----------
@@ -894,7 +930,7 @@ function renderGenba(){
   const two=(x,y)=>`<div class="rows2"><div><span>単月</span><b class="num">${x}</b></div><div><span>年間累計</span><b class="num">${y}</b></div></div>`;
   $('#gKpis').innerHTML=`
     <div class="kpi"><div class="label">メンバー（${mshort(curMonth)}時点）</div><div class="value num">${now.length}<small>名</small></div><div class="foot">${esc(gOrg.split(SEP).slice(-1)[0]||'')}</div></div>
-    <div class="kpi"><div class="label"><span class="dot" style="background:var(--over)"></span>超過（${conf.avg}h超）</div><div class="value num">${c[3]}<small>名</small></div><div class="foot">至急 人事へ報告</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--over)"></span>超過（${conf.avg}h超）</div><div class="value num">${c[3]}<small>名</small></div><div class="foot">産業医との面談が必要</div></div>
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--critical)"></span>超過（${conf.month}h超）</div><div class="value num">${c[2]}<small>名</small></div><div class="foot">年${conf.spCount}回まで</div></div>
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
     <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
@@ -982,3 +1018,4 @@ function confirmBox(title,msg,okLabel){
 </script>
 </body>
 </html>
+
