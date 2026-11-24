@@ -56,7 +56,6 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .loadInfo{margin-top:12px;font-size:12px;color:var(--ink-2)}
 .loadInfo b{color:var(--ink)}
 .loadInfo .gap{display:inline-block;margin-top:8px;text-align:left;border-left:4px solid var(--warning);background:var(--warning-bg);padding:6px 12px;border-radius:6px}
-#kpis{position:sticky;top:var(--hdr,110px);z-index:15;background:var(--page);padding:10px 0 8px;margin-top:-10px}
 .rows2{margin-top:4px}
 .rows2 div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.35}
 .rows2 span{font-size:11px;color:var(--muted)}
@@ -78,7 +77,32 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px}
 .card h2{font-size:15px;margin:0 0 4px}
 .card .desc{color:var(--ink-2);font-size:12px;margin:0 0 12px}
-#drop{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;color:var(--ink-2);background:var(--surface);transition:.15s}
+#loadCard{padding:8px}
+#drop{border:2px dashed var(--border);border-radius:8px;padding:8px 14px;color:var(--ink-2);background:var(--surface);transition:.15s;display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap;font-size:13px}
+#drop .dropMain{display:flex;align-items:center;gap:8px;white-space:nowrap}
+#drop .dropMain button{padding:4px 12px;font-size:13px}
+#drop details{font-size:12px}
+#drop details summary{cursor:pointer;color:var(--muted)}
+#drop details p{margin:6px 0 2px;max-width:720px}
+#drop .loadInfo{margin:0 0 0 auto;text-align:right}
+#drop .loadInfo .gap{margin-top:4px}
+/* 特別条項の発動回数 */
+.kpi.spc{grid-column:span 2;min-width:0}
+.spBars{display:flex;align-items:flex-end;gap:6px;height:64px;margin-top:6px}
+.spBars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:default}
+.spBars .n{font-size:13px;font-weight:700;line-height:1.2}
+.spBars .n.z{color:var(--muted);font-weight:400}
+.spBars .bar{width:100%;max-width:34px;border-radius:3px 3px 0 0;min-height:2px}
+.spBars .l{font-size:11px;color:var(--ink-2);margin-top:3px;white-space:nowrap}
+@media (max-width:700px){.kpi.spc{grid-column:span 1}}
+@media (min-width:1200px){
+  #kpis{grid-template-columns:repeat(4,minmax(0,.8fr)) repeat(2,minmax(0,1.15fr)) minmax(0,1.45fr);gap:10px}
+  #kpis .kpi .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #kpis .kpi{padding:12px}
+  #kpis .kpi.spc{grid-column:auto}
+  #kpis .rows2 b{font-size:18px}
+  #kpis .spBars{gap:4px}
+}
 #drop.over{border-color:var(--accent);background:var(--surface-2)}
 #drop strong{color:var(--ink)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center}
@@ -186,6 +210,10 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
 #login .err{color:var(--critical);font-size:13px;min-height:20px;margin-top:10px}
 #login .lbtn{width:100%;padding:11px;font-size:15px;font-weight:600;background:#42a848;border-color:#42a848;border-radius:8px}
 #login .lbtn:hover{filter:brightness(1.06)}
+#login .lbtn:disabled{cursor:wait;filter:none;opacity:.9}
+#login input:disabled{opacity:.6}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 #login .lnk{background:none;border:none;color:#2f7f34;padding:0;font-size:12px;text-decoration:underline}
 #login label.keep{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:13px;color:#3d3d3a;cursor:pointer}
 #login label.keep input{width:16px;height:16px;padding:0;accent-color:#42a848;margin:0}
@@ -193,8 +221,8 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
 .form label{display:block;font-size:12px;color:var(--ink-2);margin:12px 0 4px}
 .form input{width:100%;padding:8px 10px}
 .form .err{color:var(--critical);font-size:13px;min-height:20px;margin-top:8px}
-#busy{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:250;display:none;align-items:center;justify-content:center;color:#fff;font-size:15px}
-#busy span{background:rgba(0,0,0,.7);padding:12px 20px;border-radius:8px}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:400;display:none;align-items:center;justify-content:center;color:#fff;font-size:15px}
+#busy>span{background:rgba(0,0,0,.7);padding:12px 20px;border-radius:8px;display:flex;align-items:center}
 @media print{
   header .actions, #loadCard, .tabs, .toolbar, #settingsCard{display:none!important}
   .view{display:block!important}
@@ -238,8 +266,8 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
 <main>
   <div class="card admin-only" id="loadCard">
     <div id="drop">
-      <div><strong>日次勤務データCSVをここにドロップ</strong>、または <button class="primary" id="btnPick">ファイルを選択</button></div>
-      <div class="small" style="margin-top:6px">複数月をまとめて登録できます（Shift-JIS / UTF-8 自動判定）。登録したデータはスプレッドシートに保存され、各現場管理者の画面に反映されます。日ごと・週ごと・月ごとのどれでも登録できます。登録済みの日付を含むファイルは、その日付の分だけ新しいデータで上書きされます（ほかの日のデータは残ります）。</div>
+      <div class="dropMain"><strong>日次勤務データCSVをドロップ</strong>または <button class="primary" id="btnPick">ファイルを選択</button></div>
+      <details><summary>登録のしかた</summary><p>複数月をまとめて登録できます（Shift-JIS / UTF-8 自動判定）。登録したデータはスプレッドシートに保存され、各現場管理者の画面に反映されます。日ごと・週ごと・月ごとのどれでも登録できます。登録済みの日付を含むファイルは、その日付の分だけ新しいデータで上書きされます（ほかの日のデータは残ります）。</p></details>
       <input type="file" id="file" accept=".csv,text/csv" multiple hidden>
       <div class="loadInfo" id="loadInfo"></div>
     </div>
@@ -289,6 +317,7 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
 
   <div id="app" class="hidden admin-only">
     <div id="alerts"></div>
+    <div class="kpis" id="kpis"></div>
     <div class="tabs" role="tablist">
       <button data-tab="annual" class="on">年度一覧</button>
       <button data-tab="summary">集計（全体・部署別）</button>
@@ -308,7 +337,6 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
     </section>
 
     <section class="view hidden" id="v-summary">
-      <div class="kpis" id="kpis"></div>
       <div class="card">
         <h2>部署別</h2>
         <p class="desc">数値は残業＋休日労働。「1人あたり平均」は在籍者1人あたり、「部署合計」は部署全員の合計です。年間累計の1人あたり平均は、各月の1人あたり平均を合計した値です（退職者もその月まで含みます）。右側の人数は、対象月にその判定になった人数です。「休日出勤 延べ日数」は、対象月に休日出勤した日数の部署全員分の合計です（例：2人が2日ずつなら4日）。</p>
@@ -358,14 +386,14 @@ body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:non
         <label for="lPw">パスワード</label><input id="lPw" name="password" type="password" autocomplete="current-password" required>
         <label class="keep"><input type="checkbox" id="lKeep"> 社員番号を保持する</label>
         <div class="err" id="lErr"></div>
-        <button class="primary lbtn" type="submit">ログイン</button>
+        <button class="primary lbtn" id="lBtn" type="submit">ログイン</button>
       </form>
       <div style="margin-top:14px;text-align:center"><button class="lnk" id="lForgot" type="button">パスワードを忘れた場合</button></div>
     </div>
     <div class="lfoot">データはカオナビ勤怠から取り込んでいます。</div>
   </div>
 </div>
-<div id="busy"><span id="busyMsg">処理中…</span></div>
+<div id="busy"><span><i class="spin"></i><span id="busyMsg">処理中…</span></span></div>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
 <div class="tip" id="tip"></div>
 <div class="toast" id="toast"></div>
@@ -417,10 +445,25 @@ async function afterLogin(res){
   $('#userName').textContent=user.name+'（'+(user.role==='人事'?'人事・労務':'現場')+'）';
   $('#modeSeg').classList.toggle('hidden',user.role!=='人事');
   setMode(user.role==='人事'?'admin':'genba',true);
-  $('#login').style.display='none';
-  busy(true,'データを読み込み中…');
-  try{await reload()}catch(e){if(e.message!=='SESSION_EXPIRED')toast(e.message)}finally{busy(false)}
-  if(res.mustChange) openPwChange(true);
+  // ログイン画面から来たときは、画面が出来上がるまでログイン画面のボタンに進み具合を表示
+  const fromLogin=$('#login').style.display!=='none';
+  if(fromLogin) loginBusy('データを読み込み中…'); else busy(true,'データを読み込み中…');
+  try{await reload()}catch(e){if(e.message!=='SESSION_EXPIRED')toast(e.message)}
+  finally{busy(false);if(fromLogin){loginBusy(null);if(token)$('#login').style.display='none'}}
+  if(token&&res.mustChange) openPwChange(true);
+}
+// ログインボタンの「ログイン中…」表示。時間がかかるときは一言添える
+let loginSlowT=null;
+function loginBusy(msg){
+  const b=$('#lBtn');clearTimeout(loginSlowT);
+  ['#lNo','#lPw','#lKeep'].forEach(x=>$(x).disabled=!!msg);
+  if(msg){
+    b.disabled=true;b.innerHTML='<i class="spin"></i>'+esc(msg);
+    loginSlowT=setTimeout(()=>{const e=$('#lErr');if(!e.textContent){e.style.color='#52514e';e.textContent='通信に時間がかかっています。そのままお待ちください。'}},5000);
+  }else{
+    b.disabled=false;b.textContent='ログイン';
+    const e=$('#lErr');if(e.textContent.startsWith('通信に時間'))e.textContent='';
+  }
 }
 
 // ---------- formatting ----------
@@ -608,8 +651,33 @@ function renderSummary(){
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--critical)"></span>超過（${conf.month}h超）</div><div class="value num">${c[2]}<small>名</small></div><div class="foot">特別条項の適用（年${conf.spCount}回まで）</div></div>
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
     <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
-    <div class="kpi"><div class="label">全体の合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>`;
+    <div class="kpi"><div class="label">全体の合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>
+    ${spCountBox()}`;
+  bindSpTips($('#kpis'));
   drawHist(); drawTop();
+}
+// 特別条項（月45h超）の発動回数ごとの人数（協定年度の起算月〜対象月、在籍者）
+let spGroups=[];
+function spCountBox(){
+  const N=Math.max(1,+conf.spCount||6);
+  spGroups=Array.from({length:N},(_,i)=>({k:i+1,t:(i+1)+'回',rs:[]}));
+  const over={k:N+1,t:(N+1)+'回以上',rs:[]};
+  curRes.forEach(r=>{if(r.cnt45>N)over.rs.push(r);else if(r.cnt45>0)spGroups[r.cnt45-1].rs.push(r)});
+  if(over.rs.length)spGroups.push(over);
+  const mx=Math.max(1,...spGroups.map(g=>g.rs.length));
+  const total=spGroups.reduce((x,g)=>x+g.rs.length,0);
+  const near=spGroups.filter(g=>g.k>=N-1).reduce((x,g)=>x+g.rs.length,0);
+  const col=g=>g.k>N?'var(--over)':g.k>=N-1?'var(--critical)':'color-mix(in srgb,var(--critical) 40%,var(--surface))';
+  return `<div class="kpi spc"><div class="label"><span class="dot" style="background:var(--critical)"></span>特別条項の発動回数（年度累計）</div>
+    <div class="spBars">${spGroups.map((g,i)=>{const n=g.rs.length;return `<div class="c" data-sp="${i}"><span class="n num ${n?'':'z'}">${n}</span><span class="bar" style="height:${n?Math.max(n/mx*36,4):2}px;background:${n?col(g):'var(--grid)'}"></span><span class="l" style="${g.k>N?'color:var(--over);font-weight:700':''}">${g.t}</span></div>`}).join('')}</div>
+    <div class="foot">発動 ${total}名・残り1回以下 <b style="color:${near?'var(--critical)':'inherit'}">${near}名</b></div></div>`;
+}
+function bindSpTips(root){
+  root.querySelectorAll('[data-sp]').forEach(el=>{
+    const g=spGroups[+el.dataset.sp];
+    el.addEventListener('mousemove',ev=>showTip(ev,`<b>年度で${g.t}発動：${g.rs.length}名</b>${g.rs.length?'<div class="small" style="margin-top:4px">'+g.rs.slice(0,15).map(r=>esc(r.name)).join('、')+(g.rs.length>15?' ほか':'')+'</div>':''}`));
+    el.addEventListener('mouseleave',hideTip);
+  });
 }
 function lvlOfH(h){ // for histogram bin color by lower edge
   if(h>conf.avg*60) return 3; if(h>conf.month*60) return 2; if(h>conf.warn*60) return 1; return 0;
@@ -960,9 +1028,9 @@ setMode('genba');
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault();$('#lErr').textContent='';
   const no=$('#lNo').value.trim(),pw=$('#lPw').value;if(!no||!pw)return;
-  busy(true,'ログイン中…');
-  try{const res=await api('login',no,pw);try{if($('#lKeep').checked)localStorage.setItem('k36_no',no);else localStorage.removeItem('k36_no')}catch(e){}busy(false);await afterLogin(res)}
-  catch(err){busy(false);$('#lErr').textContent=err.message}
+  loginBusy('ログイン中…');
+  try{const res=await api('login',no,pw);try{if($('#lKeep').checked)localStorage.setItem('k36_no',no);else localStorage.removeItem('k36_no')}catch(e){}await afterLogin(res)}
+  catch(err){loginBusy(null);$('#lErr').style.color='';$('#lErr').textContent=err.message}
 });
 function askAdmin(){
   return new Promise(res=>{
