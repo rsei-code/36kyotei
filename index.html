@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>36協定 時間外労働レポート</title>
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f1f0ec; --border:#e2e1dc;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781; --grid:#e8e7e2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --good-bg:#e7f5e7; --warning-bg:#fdf2d6; --serious-bg:#fce7dd; --critical-bg:#f9e0e0;
+  --over:#6250d6; --over-bg:#ebe7fb; --absent:#dddcd7; --warn-ink:#a86f00;
+  --seq-0:#fcfcfb; --seq-1:#cde2fb; --seq-2:#9ec5f4; --seq-3:#6da7ec; --seq-4:#3987e5; --seq-5:#256abf; --seq-6:#184f95; --seq-7:#0d366b;
+  --accent:#2a78d6;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#242422; --border:#33322f;
+    --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781; --grid:#2c2b29;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --good-bg:#16301a; --warning-bg:#3a2f12; --serious-bg:#3b2219; --critical-bg:#3d1b1b;
+    --over:#9085e9; --over-bg:#2a2540; --absent:#33332f; --warn-ink:#f0c040;
+    --seq-0:#1a1a19; --accent:#3987e5;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif;font-size:14px;line-height:1.55}
+.num{font-variant-numeric:tabular-nums}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px 12px;display:flex;flex-direction:column;gap:10px;position:sticky;top:0;z-index:20}
+.hrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.user{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink-2);align-self:flex-start}
+.user #userName{margin-right:6px;padding:3px 10px;background:var(--surface-2);border-radius:999px;color:var(--ink)}
+.lnkbtn{border:none;background:none;color:var(--ink-2);font-size:12px;padding:3px 8px;text-decoration:underline;text-underline-offset:3px}
+.lnkbtn:hover{color:var(--accent);background:none}
+.monthNav{display:inline-flex;align-items:center;border:2px solid var(--accent);border-radius:10px;overflow:hidden;background:var(--surface)}
+.monthNav select{border:none;font-size:17px;font-weight:700;padding:6px 6px;color:var(--ink);cursor:pointer;background:transparent}
+.monthNav button{border:none;border-radius:0;background:var(--accent);color:#fff;font-size:13px;padding:9px 12px}
+.monthNav button:disabled{opacity:.35;cursor:default}
+.monthNav button:hover:not(:disabled){filter:brightness(1.1);background:var(--accent)}
+#kpis{position:sticky;top:var(--hdr,110px);z-index:15;background:var(--page);padding:10px 0 8px;margin-top:-10px}
+.rows2{margin-top:4px}
+.rows2 div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.35}
+.rows2 span{font-size:11px;color:var(--muted)}
+.rows2 b{font-size:20px}
+.sepL{border-left:2px solid var(--border)!important}
+.warnTxt{color:var(--warn-ink);font-weight:700}
+.redTxt{color:var(--critical);font-weight:700}
+.overTxt{color:var(--over);font-weight:700}
+header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.02em}
+header .sub{color:var(--ink-2);font-size:12px}
+.spacer{flex:1}
+select,input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+input[type=number]{width:80px;text-align:right}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);padding:6px 12px}
+button:hover{background:var(--surface-2)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+main{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px}
+.card .desc{color:var(--ink-2);font-size:12px;margin:0 0 12px}
+#drop{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;color:var(--ink-2);background:var(--surface);transition:.15s}
+#drop.over{border-color:var(--accent);background:var(--surface-2)}
+#drop strong{color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:2px 10px;font-size:12px}
+.chip button{border:none;background:none;padding:0 6px;color:var(--muted);font-size:14px;line-height:1}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin:4px 0 16px}
+.tabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--ink-2)}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.kpi .label{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.kpi .value{font-size:26px;font-weight:700;margin-top:2px}
+.kpi .v2 .value{font-size:20px}
+.kpi .v2{display:flex;gap:16px;flex-wrap:wrap}
+.kpi .value small{font-size:13px;font-weight:500;color:var(--ink-2);margin-left:3px}
+.kpi .foot{font-size:11px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1000px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--ink-2);font-weight:600;background:var(--surface);position:sticky;top:0;z-index:2;cursor:pointer;user-select:none}
+th.r,td.r{text-align:right}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.click{cursor:pointer}
+.tablewrap{max-height:640px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid transparent;color:var(--ink)}
+.badge .ic{font-size:11px;line-height:1}
+.b-good{background:var(--good-bg);border-color:var(--good)}
+.b-warning{background:var(--warning-bg);border-color:var(--warning)}
+.b-serious{background:var(--serious-bg);border-color:var(--serious)}
+.b-critical{background:var(--critical-bg);border-color:var(--critical)}
+.b-over{background:var(--over-bg);border-color:var(--over)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.reasons{font-size:11px;color:var(--ink-2)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.toolbar label{font-size:12px;color:var(--ink-2)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin:4px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend i.line{height:0;border-top:2px dashed var(--ink-2);border-radius:0;width:16px}
+svg text{font-family:inherit}
+.tip{position:fixed;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.15);border-radius:8px;padding:8px 10px;font-size:12px;z-index:100;display:none;max-width:280px}
+.tip b{font-weight:600}
+.tip .row{display:flex;justify-content:space-between;gap:14px}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 24px}
+.settings .item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--grid)}
+.settings .item span{font-size:13px}
+.settings .item small{display:block;color:var(--muted);font-size:11px}
+.note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-top:10px}
+.note b{color:var(--ink)}
+.alert{border-left:4px solid var(--warning);background:var(--warning-bg);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 16px}
+.modal{background:var(--surface);border-radius:12px;max-width:1000px;width:100%;padding:20px 22px;border:1px solid var(--border)}
+.modal h2{margin:0;font-size:18px}
+.mhead{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.empty{color:var(--muted);text-align:center;padding:30px}
+.kbox{width:100%;border-collapse:collapse;margin-bottom:12px;background:var(--surface);border:1px solid var(--border)}
+.kbox th{position:static;background:var(--surface-2);color:var(--accent);text-align:center;font-weight:600;cursor:default;border:1px solid var(--border);padding:5px 8px}
+.kbox td{text-align:center;border:1px solid var(--border);padding:8px;white-space:normal}
+.ann th,.ann td{border-right:1px solid var(--grid)}
+.ann thead th{text-align:center;background:var(--surface-2)}
+.ann thead tr:nth-child(2) th{top:31px}
+.ann th.cur{box-shadow:inset 0 -3px 0 var(--accent);color:var(--ink)}
+.ann{table-layout:fixed;width:100%;font-size:13px}
+.ann th,.ann td{padding:6px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ann td.m{text-align:right}
+.ann td.m.g{background:var(--good-bg)}
+.ann td.m.w{background:var(--warning-bg)}
+.ann td.m.r{background:var(--critical-bg);font-weight:700}
+.ann td.m.p{background:var(--over-bg);font-weight:700;color:var(--over)}
+.ann td.m.x{background:var(--absent)}
+.ann tr.ret td{color:var(--muted)}
+.b-none{background:var(--absent);border-color:var(--muted);color:var(--ink-2)}
+.ann .cnt{color:var(--critical);font-weight:700}
+.ann td.org{font-size:12px;line-height:1.35}
+.ann td.org span{color:var(--ink-2)}
+.ann tbody tr:nth-child(even){background:color-mix(in srgb,var(--surface-2) 45%,transparent)}
+.ann tbody tr:hover{background:var(--surface-2)}
+.ann .neg{color:var(--critical);font-weight:700}
+#dataInfo b{color:var(--ink)}
+.hidden{display:none!important}
+.small{font-size:12px;color:var(--ink-2)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 16px;border-radius:8px;font-size:13px;z-index:200;display:none}
+body[data-mode=genba] .admin-only, body[data-mode=admin] .genba-only{display:none!important}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:none;border-radius:0;background:none;padding:6px 14px;color:var(--ink-2)}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.follow{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.fcard{border:1px solid var(--border);border-left:4px solid var(--warning);border-radius:8px;padding:10px 12px;background:var(--surface);cursor:pointer}
+.fcard:hover{background:var(--surface-2)}
+.fcard .top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.fcard .nm{font-weight:700}
+.fcard .big{font-size:20px;font-weight:700}
+.fcard .act{font-size:12px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--grid)}
+.gbar text{font-size:10px;fill:var(--muted)}
+#login{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(160deg,#f4faf4 0%,#ffffff 45%,#eef6ef 100%)}
+#login .lwrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center}
+#login .brand{margin-bottom:22px}
+#login .brand img{display:block;height:24px;width:auto}
+#login .box{background:#fff;border:1px solid #e3e8e3;border-top:4px solid #42a848;border-radius:12px;padding:26px 30px 22px;width:100%;box-shadow:0 10px 30px rgba(40,90,45,.08)}
+#login .apptitle{font-size:18px;font-weight:700;color:#1f2a20;margin-bottom:4px;letter-spacing:.02em}
+#login label{display:block;font-size:12px;color:#52514e;margin:16px 0 5px}
+#login input{width:100%;font-size:15px;padding:10px 12px;border:1px solid #cfd6cf;border-radius:8px;background:#fafcfa;color:#0b0b0b}
+#login input:focus{outline:none;border-color:#42a848;box-shadow:0 0 0 3px rgba(66,168,72,.18);background:#fff}
+#login .err{color:var(--critical);font-size:13px;min-height:20px;margin-top:10px}
+#login .lbtn{width:100%;padding:11px;font-size:15px;font-weight:600;background:#42a848;border-color:#42a848;border-radius:8px}
+#login .lbtn:hover{filter:brightness(1.06)}
+#login .lnk{background:none;border:none;color:#2f7f34;padding:0;font-size:12px;text-decoration:underline}
+#login label.keep{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:13px;color:#3d3d3a;cursor:pointer}
+#login label.keep input{width:16px;height:16px;padding:0;accent-color:#42a848;margin:0}
+#login .lfoot{margin-top:16px;font-size:11px;color:#898781}
+.form label{display:block;font-size:12px;color:var(--ink-2);margin:12px 0 4px}
+.form input{width:100%;padding:8px 10px}
+.form .err{color:var(--critical);font-size:13px;min-height:20px;margin-top:8px}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:250;display:none;align-items:center;justify-content:center;color:#fff;font-size:15px}
+#busy span{background:rgba(0,0,0,.7);padding:12px 20px;border-radius:8px}
+@media print{
+  header .actions, #loadCard, .tabs, .toolbar, #settingsCard{display:none!important}
+  .view{display:block!important}
+  .tablewrap{max-height:none;overflow:visible}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div>
+      <h1>36協定 時間外労働レポート</h1>
+      <div class="sub" id="dataInfo">時間外・休日労働の上限チェック</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="user">
+      <span id="userName"></span>
+      <button class="lnkbtn" id="btnPw">パスワード変更</button>
+      <button class="lnkbtn" id="btnLogout">ログアウト</button>
+    </div>
+  </div>
+  <div class="hrow tools">
+    <div class="seg hidden" id="modeSeg" role="tablist" aria-label="画面の切替">
+      <button data-mode="genba">現場管理者</button>
+      <button data-mode="admin">人事・労務管理者</button>
+    </div>
+    <label class="small genba-only">部署</label>
+    <select id="gOrg" class="genba-only" style="max-width:300px"></select>
+    <div class="monthNav" title="対象月">
+      <button id="mPrev" aria-label="前の月">◀</button>
+      <select id="monthSel" aria-label="対象月"></select>
+      <button id="mNext" aria-label="次の月">▶</button>
+    </div>
+    <div class="spacer"></div>
+    <button id="btnSettings" class="admin-only">設定</button>
+    <button id="btnExport" class="admin-only">CSV出力</button>
+  </div>
+</header>
+
+<main>
+  <div class="card admin-only" id="loadCard">
+    <div id="drop">
+      <div><strong>日次勤務データCSVをここにドロップ</strong>、または <button class="primary" id="btnPick">ファイルを選択</button></div>
+      <div class="small" style="margin-top:6px">複数月をまとめて登録できます（Shift-JIS / UTF-8 自動判定）。登録したデータはスプレッドシートに保存され、各現場管理者の画面に反映されます。日ごと・週ごと・月ごとのどれでも登録できます。登録済みの日付を含むファイルは、その日付の分だけ新しいデータで上書きされます（ほかの日のデータは残ります）。</div>
+      <input type="file" id="file" accept=".csv,text/csv" multiple hidden>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="settingsCard">
+    <h2>判定設定（36協定の締結内容に合わせて変更してください）</h2>
+    <p class="desc">変更内容はスプレッドシートに保存され、全員の判定に反映されます。</p>
+    <div class="settings">
+      <label class="item"><span>協定の起算月<small>年間累計・回数カウントの開始月</small></span><select id="cfStart"></select></label>
+      <label class="item"><span>所定休日（土曜等）の労働を時間外に含める<small>週40h超となる前提で法定時間外として扱う</small></span><input type="checkbox" id="cfInclShotei"></label>
+      <label class="item"><span>役員を対象外にする<small>雇用区分「役員」</small></span><input type="checkbox" id="cfExclYakuin"></label>
+      <label class="item"><span>アラートメールを送る<small>CSV登録時、段階（注意40h超／超過45h超／超過80h超）が上がった人を、担当の現場管理者と人事にメールで通知</small></span><input type="checkbox" id="cfAlert"></label>
+      <label class="item"><span>除外する従業員番号<small>カンマ区切り（管理監督者など）</small></span><input type="text" id="cfExclNos" style="width:150px" placeholder="例: 28,8000"></label>
+      <label class="item"><span>注意ライン（月・時間外）<small>早期フォロー対象</small></span><span><input type="number" id="cfWarn" step="1"> h</span></label>
+      <label class="item"><span>原則の上限（月）<small>法定：45h</small></span><span><input type="number" id="cfMonth" step="1"> h</span></label>
+      <label class="item"><span>原則の上限（年）<small>法定：360h</small></span><span><input type="number" id="cfYear" step="1"> h</span></label>
+      <label class="item"><span>特別条項発動後の上限（単月・時間外＋休日）<small>この時間「未満」が上限。法定：100h未満</small></span><span><input type="number" id="cfSpMonth" step="1"> h</span></label>
+      <label class="item"><span>特別条項の年上限（時間外）<small>法定上限：720h</small></span><span><input type="number" id="cfSpYear" step="1"> h</span></label>
+      <label class="item"><span>特別条項の適用回数上限（年）<small>法定上限：6回</small></span><span><input type="number" id="cfSpCount" step="1"> 回</span></label>
+      <label class="item"><span>80時間ライン<small>月の「超過(80h超)」の判定と、2〜6か月平均の上限（法定：80h以内）に使用</small></span><span><input type="number" id="cfAvg" step="1"> h</span></label>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button id="btnReset">初期値に戻す</button>
+    </div>
+  </div>
+
+  <section id="genba" class="genba-only">
+    <div class="card hidden" id="gEmpty">
+      <h2>データがまだありません</h2>
+      <p class="desc">人事・労務管理者が勤怠データを登録すると表示されます。</p>
+    </div>
+    <div id="gBody">
+      <div id="gAlerts"></div>
+      <div class="kpis" id="gKpis"></div>
+      <div class="card">
+        <div id="gHead"></div>
+        <div class="legend annLegend"></div>
+        <div class="tablewrap" id="gAnnual" style="max-height:none"></div>
+      </div>
+      <div class="card">
+        <h2>判定の見方</h2>
+        <div class="note" id="gHelp"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="app" class="hidden admin-only">
+    <div id="alerts"></div>
+    <div class="tabs" role="tablist">
+      <button data-tab="annual" class="on">年度一覧</button>
+      <button data-tab="summary">集計（全体・部署別）</button>
+    </div>
+
+    <section class="view" id="v-annual">
+      <div class="card">
+        <div id="aHead"></div>
+        <div class="toolbar">
+          <label>組織</label><select id="aOrg"></select>
+          <label>判定</label><select id="aLvl"><option value="">すべて</option><option value="ge1">注意以上</option><option value="ge2">超過（45h超）以上</option><option value="3">超過（80h超）</option></select>
+          <span class="small" id="aCount"></span>
+          <span class="legend annLegend" style="margin:0"></span>
+        </div>
+        <div class="tablewrap" id="aAnnual"></div>
+      </div>
+    </section>
+
+    <section class="view hidden" id="v-summary">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <h2>部署別</h2>
+        <p class="desc">数値は残業＋休日労働。「1人あたり平均」は在籍者1人あたり、「部署合計」は部署全員の合計です。年間累計の1人あたり平均は、各月の1人あたり平均を合計した値です（退職者もその月まで含みます）。右側の人数は、対象月にその判定になった人数です。「休日出勤 延べ日数」は、対象月に休日出勤した日数の部署全員分の合計です（例：2人が2日ずつなら4日）。</p>
+        <div class="tablewrap" id="orgTable" style="max-height:none"></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>対象月の分布</h2>
+          <p class="desc">5時間刻みの人数。色は判定区分。</p>
+          <div class="legend" id="histLegend"></div>
+          <div id="hist"></div>
+        </div>
+        <div class="card">
+          <h2>対象月の上位20名</h2>
+          <p class="desc">点線は原則上限と特別条項の上限。棒をクリックで個人詳細。</p>
+          <div class="legend" id="topLegend"></div>
+          <div id="top"></div>
+        </div>
+      </div>
+    </section>
+
+
+
+  </div>
+
+  <div class="card admin-only" id="aboutCard">
+    <h2>判定のしかた</h2>
+    <div class="note">
+      数値はすべて <b>残業時間 ＋ 休日労働時間</b>（勤怠システムの「月間残業時間＋月間休日労働時間」と同じ）です。<br>
+      <b>正常</b>：月40時間以下　<b>注意</b>：月40時間超　<b>超過(45h超)</b>：月45時間超（特別条項の適用。年6回まで）<br>
+      <b>超過(80h超)</b>：月80時間超、または上限に抵触（月100時間以上、2〜6か月平均80時間超、年720時間超、45時間超が年7回以上）<br>
+      時間数・回数は人事画面の「設定」の値に従います。年度累計と2〜6か月平均は、登録済みの月だけで計算します（不足がある場合は画面上部に表示）。
+    </div>
+  </div>
+</main>
+
+<div id="login">
+  <div class="lwrap">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="MASUDA" width="201" height="24">
+    </div>
+    <div class="box">
+      <div class="apptitle">36協定 時間外労働レポート</div>
+      <div class="small">社員番号とパスワードでログインしてください</div>
+      <form id="loginForm" autocomplete="on">
+        <label for="lNo">社員番号</label><input id="lNo" name="username" inputmode="numeric" autocomplete="username" required>
+        <label for="lPw">パスワード</label><input id="lPw" name="password" type="password" autocomplete="current-password" required>
+        <label class="keep"><input type="checkbox" id="lKeep"> 社員番号を保持する</label>
+        <div class="err" id="lErr"></div>
+        <button class="primary lbtn" type="submit">ログイン</button>
+      </form>
+      <div style="margin-top:14px;text-align:center"><button class="lnk" id="lForgot" type="button">パスワードを忘れた場合</button></div>
+    </div>
+    <div class="lfoot">データはカオナビ勤怠から取り込んでいます。</div>
+  </div>
+</div>
+<div id="busy"><span id="busyMsg">処理中…</span></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DEFAULT_CONF={start:4,inclShotei:true,exclYakuin:true,exclNos:'',warn:40,month:45,year:360,spMonth:100,spYear:720,spCount:6,hard:100,avg:80,alert:false};
+let conf=Object.assign({},DEFAULT_CONF);
+let store={months:{}};
+let mode='admin', gOrg='', showHok=false;
+let curMonth=null, results=[], sortState={list:{k:'T',d:-1}}, curTab='annual';
+
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+let curRes=[];
+let token=null, user=null, companyAvg={}, lastUpdate=null, annSort={k:'org',d:1};
+// ---------- server ----------
+// Apps Script（裏方）のURL。デプロイを「新バージョン」で更新している限り変わりません。
+const API_URL='https://script.google.com/macros/s/AKfycby3AT8zW9LmYXrReV3V9yZB1oBuAM6aRdyOs32A7cP8G8LCtQMjx5Mh7Vfi9Ooob4Ii0Q/exec';
+async function api(fn,...args){
+  let d;
+  try{
+    // text/plain で送ると、ブラウザの事前確認（CORS）なしで Apps Script に届く
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})});
+    d=await r.json();
+  }catch(e){throw new Error('サーバーに接続できませんでした。通信環境を確認して、もう一度お試しください。')}
+  if(d&&d.ok) return d.result;
+  const m=String((d&&d.error)||'不明なエラーが発生しました。');
+  if(/ADMIN_REQUIRED/.test(m)){setMode('genba',true);toast('管理者画面の有効時間が切れたため、現場管理者画面に戻りました。');throw new Error('SESSION_EXPIRED')}
+  if(/SESSION_EXPIRED/.test(m)){showLogin('一定時間操作がなかったため、ログアウトしました。もう一度ログインしてください。');throw new Error('SESSION_EXPIRED')}
+  throw new Error(m.replace(/^Exception:\s*/,'').replace(/^Error:\s*/,''));
+}
+function busy(on,msg){$('#busyMsg').textContent=msg||'処理中…';$('#busy').style.display=on?'flex':'none'}
+async function reload(){
+  const d=await api('getData',token);
+  user=d.user;conf=Object.assign({},DEFAULT_CONF,d.conf);companyAvg=d.companyAvg||{};lastUpdate=d.lastUpdate||null;store={months:d.months||{}};
+  fillConf();render();
+}
+function showLogin(msg){isAdmin=false;document.body.dataset.mode='genba';ssDel();token=null;user=null;store={months:{}};results=[];curMonth=null;try{render()}catch(e){}$('#login').style.display='flex';$('#lErr').textContent=msg||'';$('#lErr').style.color=msg==='ログアウトしました。'?'#52514e':'';$('#lPw').value='';$('#modalBg').style.display='none';let kept=null;try{kept=localStorage.getItem('k36_no')}catch(e){}$('#lKeep').checked=!!kept;$('#lNo').value=kept||'';setTimeout(()=>(kept?$('#lPw'):$('#lNo')).focus(),50)}
+function ssGet(){try{return sessionStorage.getItem('k36_token')}catch(e){return null}}
+function ssSet(t){try{sessionStorage.setItem('k36_token',t)}catch(e){}}
+function ssDel(){try{sessionStorage.removeItem('k36_token')}catch(e){}}
+async function afterLogin(res){
+  token=res.token;user=res.user;ssSet(token);
+  $('#userName').textContent=user.name+'（'+(user.role==='人事'?'人事・労務':'現場')+'）';
+  $('#modeSeg').classList.toggle('hidden',user.role!=='人事');
+  setMode(user.role==='人事'?'admin':'genba',true);
+  $('#login').style.display='none';
+  busy(true,'データを読み込み中…');
+  try{await reload()}catch(e){if(e.message!=='SESSION_EXPIRED')toast(e.message)}finally{busy(false)}
+  if(res.mustChange) openPwChange(true);
+}
+
+// ---------- formatting ----------
+const hm=m=>{m=Math.round(m||0);const s=m<0?'-':'';m=Math.abs(m);return s+Math.floor(m/60)+':'+String(m%60).padStart(2,'0')};
+const hdec=m=>(Math.round((m||0)/60*100)/100).toFixed(2);
+const mlabel=k=>{const [y,m]=k.split('-');return y+'年'+(+m)+'月'};
+const mshort=k=>(+k.split('-')[1])+'月';
+function addMonth(k,n){let [y,m]=k.split('-').map(Number);m+=n;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return y+'-'+String(m).padStart(2,'0')}
+function fyMonths(k){const [y,m]=k.split('-').map(Number);const fy=m>=conf.start?y:y-1;const out=[];let x=fy+'-'+String(conf.start).padStart(2,'0');for(let i=0;i<12;i++){out.push(x);x=addMonth(x,1)}return out}
+
+// ---------- CSV ----------
+function decode(buf){
+  const u8=new Uint8Array(buf);
+  if(u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF) return new TextDecoder('utf-8').decode(u8.subarray(3));
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(u8)}catch(e){return new TextDecoder('shift_jis').decode(u8)}
+}
+function parseCSV(t){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++} else q=false } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){row.push(f);f=''}
+    else if(c==='\n'){row.push(f);rows.push(row);row=[];f=''}
+    else if(c!=='\r') f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+const REQ=['日付','従業員番号','従業員名','残業時間'];
+function ingest(text,fileName,target){
+  const rows=parseCSV(text); if(!rows.length) throw new Error('空のファイルです');
+  const h=rows[0].map(s=>s.trim());
+  const ix={};h.forEach((n,i)=>ix[n]=i);
+  for(const r of REQ) if(!(r in ix)) throw new Error('列「'+r+'」が見つかりません（日次勤務データCSVか確認してください）');
+  const g=(r,n)=>ix[n]!=null?(r[ix[n]]||'').trim():'';
+  const num=(r,n)=>{const v=parseFloat(g(r,n));return isFinite(v)?v:0};
+  const byMonth={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; if(r.length<4) continue;
+    const d=g(r,'日付'); const mm=d.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/); if(!mm) continue;
+    const mk=mm[1]+'-'+mm[2].padStart(2,'0'); const day=+mm[3];
+    const no=g(r,'従業員番号'); if(!no) continue;
+    const M=byMonth[mk]||(byMonth[mk]={fileName,loadedAt:new Date().toISOString(),emps:{},maxDay:0,minDay:99});
+    M.maxDay=Math.max(M.maxDay,day);M.minDay=Math.min(M.minDay,day);
+    const e=M.emps[no]||(M.emps[no]={present:0,name:g(r,'従業員名'),org:g(r,'組織'),kbn:g(r,'雇用区分'),ot:0,shk:0,hok:0,hol:0,night:0,work:0,kyushutsu:0,hoteiDays:0,days:[]});
+    const ot=num(r,'残業時間'), hol=num(r,'休日労働時間'), hok=num(r,'法定休日労働時間');
+    let shk=ix['所定休日労働時間']!=null?num(r,'所定休日労働時間'):Math.max(0,hol-hok);
+    const night=num(r,'深夜労働時間'), work=num(r,'実働時間');
+    if(g(r,'勤務状況')!=='不在籍') e.present++;
+    e.ot+=ot;e.shk+=shk;e.hok+=hok;e.hol+=hol;e.night+=night;e.work+=work;
+    if(hol>0) e.kyushutsu++; if(hok>0) e.hoteiDays++;
+    if(ot+hol+night>0) e.days.push([day,g(r,'勤務状況'),g(r,'実績(出)'),g(r,'実績(退)'),ot,shk,hok,night,g(r,'理由')]);
+  }
+  const keys=Object.keys(byMonth);
+  if(!keys.length) throw new Error('日付を含む行がありません');
+  keys.forEach(k=>{const E=byMonth[k].emps;for(const no in E)if(!E[no].present)delete E[no]});
+  keys.forEach(k=>target[k]=byMonth[k]);
+  return keys;
+}
+async function loadFiles(files){
+  if(!user||user.role!=='人事') return;
+  const loaded=[],errs=[],tmp={},alertRes=[];
+  for(const f of files){
+    try{const buf=await f.arrayBuffer();ingest(decode(buf),f.name,tmp)}
+    catch(e){errs.push(f.name+'：'+e.message)}
+  }
+  const keys=Object.keys(tmp).sort();
+  // 登録済みの日付と重なる期間があるか
+  const ovl=keys.map(k=>{const M=tmp[k],R=(store.months[k]&&store.months[k].ranges)||[];const mo=+k.slice(5);
+    const hit=[];for(let d=M.minDay;d<=M.maxDay;d++)if(R.some(([f,t])=>d>=f&&d<=t))hit.push(d);
+    return hit.length?`${mo}/${hit[0]}〜${mo}/${hit[hit.length-1]}`:null}).filter(Boolean);
+  const plan=keys.map(k=>{const mo=+k.slice(5);return `${mo}/${tmp[k].minDay}〜${mo}/${tmp[k].maxDay}`}).join('、');
+  const ovlMsg=ovl.length?`（${ovl.join('、')} は新しいデータで上書き）`:'';
+  for(const k of keys){
+    const M=tmp[k];busy(true,mlabel(k)+'（'+M.minDay+'日〜'+M.maxDay+'日）を登録中…');
+    const emps=[],days=[];
+    for(const no in M.emps){const e=M.emps[no];emps.push([no,e.name,e.org,e.kbn]);e.days.forEach(d=>days.push([no,...d]))}
+    try{const res=await api('uploadMonth',token,{month:k,from:M.minDay,to:M.maxDay,fileName:M.fileName,emps,days});loaded.push(k);if(res&&res.alert)alertRes.push(res.alert)}
+    catch(e){if(e.message==='SESSION_EXPIRED'){busy(false);return}errs.push(mlabel(k)+'：'+e.message)}
+  }
+  busy(false);
+  if(loaded.length){busy(true,'最新データを取得中…');try{await reload()}catch(e){}busy(false);curMonth=loaded.sort().slice(-1)[0];render();toast(plan+' を登録しました'+ovlMsg);
+    const al=alertRes.find(a=>a.sent||a.error||a.quotaOut);
+    if(al) setTimeout(()=>toast(al.error?'アラートメールを送れませんでした：'+al.error:al.quotaOut?'メールの1日の送信上限に達したため、一部のアラートを送れませんでした':`アラートメールを送信しました（対象 ${al.people}名・宛先 ${al.sent}件）`),3600);}
+  if(errs.length) showModal('<h2>読み込みエラー</h2><p>'+errs.map(esc).join('<br>')+'</p><button onclick="document.getElementById(\'modalBg\').style.display=\'none\'">閉じる</button>');
+  render();
+}
+
+// ---------- calculation ----------
+function excluded(no,e){
+  if(conf.exclYakuin&&e.kbn==='役員') return true;
+  const set=String(conf.exclNos||'').split(/[,、\s]+/).filter(Boolean);
+  return set.includes(no);
+}
+function Hof(e){return e?e.ot+(conf.inclShotei?e.shk:0):0}
+function compute(mk){
+  const M=store.months[mk]; if(!M) return [];
+  const fy=fyMonths(mk), fyUpTo=fy.slice(0,fy.indexOf(mk)+1);
+  // 協定年度内に1か月でも在籍した人（退職者を含む）。氏名・所属は最後に在籍した月の値
+  const ids=new Map();
+  for(const m of fyUpTo){const Mm=store.months[m];if(!Mm)continue;for(const no in Mm.emps)ids.set(no,Mm.emps[no])}
+  const Z={ot:0,shk:0,hok:0,night:0,work:0,kyushutsu:0,hoteiDays:0,days:[]};
+  const out=[];
+  for(const [no,ref] of ids){
+    if(excluded(no,ref)) continue;
+    const cur=M.emps[no], e=cur||Z;
+    const H=Hof(e), L=e.hok, T=H+L;
+    let maxAvg=null,maxAvgK=null; const avgs={};
+    for(let k=2;k<=6;k++){
+      let ok=true,sum=0;
+      for(let j=0;j<k;j++){const m2=store.months[addMonth(mk,-j)];if(!m2){ok=false;break}const e2=m2.emps[no];sum+=e2?Hof(e2)+e2.hok:0}
+      if(!ok) break;
+      const a=sum/k; avgs[k]=a; if(maxAvg==null||a>maxAvg){maxAvg=a;maxAvgK=k}
+    }
+    let yearH=0,yearT=0,cnt45=0; const monthly={};
+    for(const m of fyUpTo){const m2=store.months[m];if(!m2)continue;const e2=m2.emps[no];const h=e2?Hof(e2):0;monthly[m]=h;yearH+=h;yearT+=e2?e2.ot+e2.shk+e2.hok:0;if(h>conf.month*60)cnt45++}
+    const reasons=[];let lvl=0;
+    const crit=[],ser=[],warn=[];
+    if(T>=conf.spMonth*60) crit.push('時間外+休日が'+conf.spMonth+'h以上（上限は'+conf.spMonth+'h未満）');
+    else if(T>conf.avg*60) crit.push('月'+conf.avg+'h超');
+    if(maxAvg!=null&&maxAvg>conf.avg*60) crit.push(maxAvgK+'か月平均 '+conf.avg+'h超');
+    if(yearH>conf.spYear*60) crit.push('年'+conf.spYear+'h超');
+    if(cnt45>conf.spCount) crit.push(conf.month+'h超が年'+cnt45+'回');
+    if(H>conf.month*60) ser.push('月'+conf.month+'h超（年'+cnt45+'回目）');
+    if(yearH>conf.year*60) ser.push('年'+conf.year+'h超');
+    if(H>conf.warn*60) warn.push('注意ライン'+conf.warn+'h超');
+    if(crit.length) lvl=3; else if(ser.length) lvl=2; else if(warn.length) lvl=1;
+    reasons.push(...crit,...ser,...(lvl<=1?warn:[]));
+    out.push({no,name:ref.name,org:ref.org,kbn:ref.kbn,retired:!cur,ot:e.ot,shk:e.shk,hok:e.hok,night:e.night,work:e.work,kyushutsu:e.kyushutsu,hoteiDays:e.hoteiDays,H,L,T,maxAvg,maxAvgK,avgs,yearH,yearT,cnt45,monthly,lvl,reasons,remain:conf.month*60-H,days:e.days});
+  }
+  return out;
+}
+// 残業＋休日の集計（退職者を含め、各月に在籍した人で計算）。1人あたり平均の年間累計＝各月の1人あたり平均の合計
+function aggT(pred){
+  const fy=fyMonths(curMonth), upto=fy.slice(0,fy.indexOf(curMonth)+1);
+  let mSum=0,mN=0,ySum=0,yAvg=0;
+  for(const m of upto){const M=store.months[m];if(!M)continue;let s=0,n=0;
+    for(const no in M.emps){const e=M.emps[no];if(excluded(no,e)||!pred(e))continue;s+=e.ot+e.shk+e.hok;n++}
+    ySum+=s;if(n)yAvg+=s/n;if(m===curMonth){mSum=s;mN=n}}
+  return {mSum,mN,mAvg:mN?mSum/mN:0,ySum,yAvg};
+}
+const LVL=[
+  {cls:'b-good',t:'正常',col:'var(--good)'},
+  {cls:'b-warning',t:'注意',col:'var(--warning)'},
+  {cls:'b-critical',t:'超過(45h超)',col:'var(--critical)'},
+  {cls:'b-over',t:'超過(80h超)',col:'var(--over)'}];
+const badge=l=>`<span class="badge ${LVL[l].cls}">${LVL[l].t}</span>`;
+
+// ---------- render ----------
+function render(){
+  const months=Object.keys(store.months).sort();
+  $('#chips').innerHTML=months.map(k=>`<span class="chip">${mlabel(k)}<span class="small">（${store.months[k].maxDay||'?'}日まで）</span></span>`).join('');
+  $('#gEmpty').classList.toggle('hidden',!!months.length);$('#gBody').classList.toggle('hidden',!months.length);
+  if(!months.length){$('#app').classList.add('hidden');$('#monthSel').innerHTML='<option>—</option>';$('#gOrg').innerHTML='<option>—</option>';return}
+  $('#app').classList.remove('hidden');
+  if(!curMonth||!store.months[curMonth]) curMonth=months[months.length-1];
+  $('#monthSel').innerHTML=months.slice().reverse().map(k=>`<option value="${k}" ${k===curMonth?'selected':''}>${mlabel(k)}</option>`).join('');
+  $('#mPrev').disabled=months.indexOf(curMonth)<=0;$('#mNext').disabled=months.indexOf(curMonth)>=months.length-1;
+  results=compute(curMonth);curRes=results.filter(r=>!r.retired);
+  showHok=results.some(r=>r.hok>0);
+  renderAlerts();renderSummary();renderOrg();renderAnnualAdmin();renderGenba();renderDataInfo();
+}
+function renderAlerts(){
+  const fy=fyMonths(curMonth), upto=fy.slice(0,fy.indexOf(curMonth)+1);
+  const miss=upto.filter(m=>!store.months[m]);
+  const prev=[1,2,3,4,5].map(i=>addMonth(curMonth,-i)).filter(m=>!store.months[m]);
+  const msgs=[];
+  const M=store.months[curMonth];
+  const lastDay=new Date(+curMonth.slice(0,4),+curMonth.slice(5),0).getDate();
+  const gaps=[];{const R=M.ranges||[];let st=null;for(let d=1;d<=M.maxDay;d++){const c=!R.length||R.some(([f,t])=>d>=f&&d<=t);if(!c&&st==null)st=d;if(c&&st!=null){gaps.push(st===d-1?`${st}日`:`${st}〜${d-1}日`);st=null}}}
+  if(gaps.length) msgs.push(`${mlabel(curMonth)}は ${gaps.join('、')} のデータが登録されていません。その日の時間外労働は0として計算しています。`);
+  if(M.maxDay<lastDay) msgs.push(`${mlabel(curMonth)}のデータは${M.maxDay}日までです（月途中の速報値として判定しています）。`);
+  if(miss.length) msgs.push(`協定年度（${mlabel(fy[0])}起算）のうち ${miss.map(mshort).join('・')} のデータが未読込のため、年度累計・${conf.month}h超回数は読み込み済みの月のみで計算しています。`);
+  if(prev.length) msgs.push(`前月以前のデータ（${prev.slice().reverse().map(mshort).join('・')}）が未読込のため、2〜6か月平均は計算できる期間のみ判定しています。`);
+  $('#alerts').innerHTML=msgs.map(m=>`<div class="alert">${esc(m)}</div>`).join('');
+}
+function renderSummary(){
+  const n=curRes.length, c=[0,0,0,0]; curRes.forEach(r=>c[r.lvl]++);
+  const a=aggT(()=>true);
+  const two=(x,y)=>`<div class="rows2"><div><span>単月</span><b class="num">${x}</b></div><div><span>年間累計</span><b class="num">${y}</b></div></div>`;
+  $('#kpis').innerHTML=`
+    <div class="kpi"><div class="label">対象者（${mshort(curMonth)}時点）</div><div class="value num">${n}<small>名</small></div><div class="foot">役員・除外設定を除く</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--over)"></span>超過（${conf.avg}h超）</div><div class="value num">${c[3]}<small>名</small></div><div class="foot">月${conf.avg}h超・上限抵触など</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--critical)"></span>超過（${conf.month}h超）</div><div class="value num">${c[2]}<small>名</small></div><div class="foot">特別条項の適用（年${conf.spCount}回まで）</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
+    <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
+    <div class="kpi"><div class="label">全体の合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>`;
+  drawHist(); drawTop();
+}
+function lvlOfH(h){ // for histogram bin color by lower edge
+  if(h>conf.avg*60) return 3; if(h>conf.month*60) return 2; if(h>conf.warn*60) return 1; return 0;
+}
+function drawHist(){
+  const step=5*60, maxH=Math.max(...curRes.map(r=>r.H),0);
+  const nb=Math.max(Math.ceil((maxH+1)/step),Math.ceil((conf.month*60+step)/step));
+  const bins=Array.from({length:nb},(_,i)=>({lo:i*step,hi:(i+1)*step,n:0,names:[]}));
+  curRes.forEach(r=>{const i=Math.min(nb-1,r.H<=0?0:Math.ceil(r.H/step)-1);bins[i].n++;if(bins[i].names.length<8)bins[i].names.push(r.name)});
+  const W=620,H=260,ml=40,mr=10,mt=10,mb=36,iw=W-ml-mr,ih=H-mt-mb;
+  const ymax=niceMax(Math.max(...bins.map(b=>b.n),1)); const bw=iw/nb;
+  const cols=['var(--good)','var(--warning)','var(--critical)','var(--over)'];
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="時間外労働の分布">`;
+  ticks(ymax).forEach(t=>{const y=mt+ih-t/ymax*ih;s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${ml-6}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--muted)">${t}</text>`});
+  bins.forEach((b,i)=>{
+    const x=ml+i*bw, h=b.n/ymax*ih, y=mt+ih-h; const L=lvlOfH(b.lo+1);
+    if(b.n>0) s+=`<path d="${roundTop(x+1,y,bw-2,h,3)}" fill="${cols[L]}"/>`;
+    s+=`<rect x="${x}" y="${mt}" width="${bw}" height="${ih}" fill="transparent" data-tip="hist" data-i="${i}"/>`;
+    if(i%2===0) s+=`<text x="${x}" y="${H-mb+14}" font-size="10" fill="var(--muted)" text-anchor="middle">${b.lo/60}</text>`;
+  });
+  s+=`<line x1="${ml}" x2="${W-mr}" y1="${mt+ih}" y2="${mt+ih}" stroke="var(--muted)"/>`;
+  s+=`<text x="${ml+iw/2}" y="${H-4}" font-size="11" fill="var(--ink-2)" text-anchor="middle">時間外労働（時間）</text>`;
+  s+=`<text x="12" y="${mt+ih/2}" font-size="11" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 12 ${mt+ih/2})">人数</text></svg>`;
+  $('#hist').innerHTML=s;
+  $('#histLegend').innerHTML=[`<span><i style="background:var(--good)"></i>正常（${conf.warn}h以下）</span>`,`<span><i style="background:var(--warning)"></i>注意（${conf.warn}h超）</span>`,`<span><i style="background:var(--critical)"></i>超過（${conf.month}h超）</span>`,`<span><i style="background:var(--over)"></i>超過（${conf.avg}h超）</span>`].join('');
+  bindTips($('#hist'),el=>{const b=bins[+el.dataset.i];return `<b>${b.lo/60}超〜${b.hi/60}時間以下</b><div class="row"><span>人数</span><span class="num">${b.n}名</span></div>${b.names.length?'<div class="small" style="margin-top:4px">'+b.names.map(esc).join('、')+(b.n>b.names.length?' ほか':'')+'</div>':''}`});
+}
+function drawTop(){
+  const top=curRes.slice().sort((a,b)=>b.T-a.T).slice(0,20).filter(r=>r.T>0);
+  if(!top.length){$('#top').innerHTML='<div class="empty">データなし</div>';$('#topLegend').innerHTML='';return}
+  const rowH=22,ml=150,mr=56,mt=18,W=620,H=mt+top.length*rowH+24,iw=W-ml-mr;
+  const xmax=niceMax(Math.max(top[0].T,conf.spMonth*60)/60)*60;
+  const X=v=>ml+v/xmax*iw;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="時間外＋休日 上位20名">`;
+  ticks(xmax/60).forEach(t=>{const x=X(t*60);s+=`<line x1="${x}" x2="${x}" y1="${mt}" y2="${H-24}" stroke="var(--grid)"/><text x="${x}" y="${H-8}" font-size="10" fill="var(--muted)" text-anchor="middle">${t}h</text>`});
+  top.forEach((r,i)=>{
+    const y=mt+i*rowH+4,bh=rowH-8; let x=ml;
+    const segs=[[r.ot,'var(--s1)'],[conf.inclShotei?r.shk:0,'var(--s2)'],[r.hok,'var(--s3)']].filter(z=>z[0]>0);
+    segs.forEach((z,j)=>{const w=Math.max(z[0]/xmax*iw-(j<segs.length-1?2:0),1);s+=j===segs.length-1?`<path d="${roundRight(x,y,w,bh,3)}" fill="${z[1]}"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${bh}" fill="${z[1]}"/>`;x+=w+2});
+    s+=`<text x="${ml-8}" y="${y+bh-2}" font-size="11" fill="var(--ink)" text-anchor="end">${esc(trunc(r.name,10))}</text>`;
+    s+=`<text x="${X(r.T)+6}" y="${y+bh-2}" font-size="11" fill="var(--ink-2)" class="num">${hm(r.T)}</text>`;
+    s+=`<rect x="0" y="${y-3}" width="${W}" height="${rowH}" fill="transparent" data-i="${i}" style="cursor:pointer"/>`;
+  });
+  [[conf.month,conf.month+'h'],[conf.avg,conf.avg+'h'],[conf.spMonth,'上限'+conf.spMonth+'h']].forEach(([v,l])=>{if(v*60<=xmax){const x=X(v*60);s+=`<line x1="${x}" x2="${x}" y1="${mt-4}" y2="${H-24}" stroke="var(--ink-2)" stroke-dasharray="4 3"/><text x="${x}" y="${mt-6}" font-size="10" fill="var(--ink-2)" text-anchor="middle">${l}</text>`}});
+  s+='</svg>';
+  $('#top').innerHTML=s;
+  $('#topLegend').innerHTML=`<span><i style="background:var(--s1)"></i>残業</span>${conf.inclShotei?'<span><i style="background:var(--s2)"></i>所定休日労働</span>':''}${showHok?'<span><i style="background:var(--s3)"></i>法定休日労働</span>':''}`;
+  bindTips($('#top'),el=>{const r=top[+el.dataset.i];return `<b>${esc(r.name)}</b>（${esc(r.no)}）<div class="small">${esc(r.org)}</div><div class="row"><span>残業</span><span class="num">${hm(r.ot)}</span></div><div class="row"><span>所定休日労働</span><span class="num">${hm(r.shk)}</span></div>${showHok?`<div class="row"><span>法定休日労働</span><span class="num">${hm(r.hok)}</span></div>`:''}<div class="row"><b>時間外＋休日</b><b class="num">${hm(r.T)}</b></div>`},el=>openDetail(top[+el.dataset.i].no));
+}
+const COLS=[
+  {k:'lvl',t:'判定',f:r=>badge(r.lvl)},
+  {k:'no',t:'従業員番号',f:r=>esc(r.no),num:true},
+  {k:'name',t:'氏名',f:r=>esc(r.name)},
+  {k:'org',t:'組織',f:r=>esc(r.org)},
+  {k:'kbn',t:'雇用区分',f:r=>esc(r.kbn)},
+  {k:'ot',t:'残業',f:r=>hm(r.ot),r:1},
+  {k:'shk',t:'所定休日',f:r=>hm(r.shk),r:1},
+  {k:'hok',t:'法定休日',f:r=>hm(r.hok),r:1,cond:()=>showHok},
+  {k:'H',t:'時間外計',f:r=>'<b>'+hm(r.H)+'</b>',r:1},
+  {k:'T',t:'時間外+休日',f:r=>hm(r.T),r:1},
+  {k:'remain',t:`${'45'}h迄残`,f:r=>r.remain>=0?hm(r.remain):'<span style="color:var(--critical)">超過 '+hm(-r.remain)+'</span>',r:1},
+  {k:'maxAvg',t:'2〜6月平均(最大)',f:r=>r.maxAvg==null?'<span class="small">—</span>':hm(r.maxAvg)+' <span class="small">('+r.maxAvgK+'か月)</span>',r:1},
+  {k:'yearH',t:'年度累計',f:r=>hm(r.yearH),r:1},
+  {k:'cnt45',t:'45h超回数',f:r=>r.cnt45+'回',r:1},
+  {k:'kyushutsu',t:'休出日数',f:r=>r.kyushutsu+'日',r:1},
+  {k:'reasons',t:'該当事由',f:r=>'<span class="reasons">'+esc(r.reasons.join(' / '))+'</span>',nosort:1},
+];
+function colsNow(){return COLS.filter(c=>!c.cond||c.cond()).map(c=>c.k==='remain'?Object.assign({},c,{t:conf.month+'h迄残'}):c.k==='cnt45'?Object.assign({},c,{t:conf.month+'h超回数'}):c)}
+function tableHTML(rows,id){
+  const st=sortState[id];
+  let s='<table><thead><tr>'+colsNow().map(c=>`<th class="${c.r?'r':''}" data-sort="${c.nosort?'':c.k}" data-tbl="${id}">${c.t}${st&&st.k===c.k?(st.d>0?' ▲':' ▼'):''}</th>`).join('')+'</tr></thead><tbody>';
+  s+=rows.map(r=>`<tr class="click" data-no="${esc(r.no)}">`+colsNow().map(c=>`<td class="${c.r?'r num':''}">${c.f(r)}</td>`).join('')+'</tr>').join('');
+  return s+'</tbody></table>';
+}
+function sortRows(rows,st){
+  const k=st.k,d=st.d;
+  return rows.sort((a,b)=>{let x=a[k],y=b[k];if(k==='no'){x=+x||x;y=+y||y}if(x==null)x=-1;if(y==null)y=-1;return (x>y?1:x<y?-1:0)*d||b.T-a.T});
+}
+function renderListFilters(){
+  const orgs=[...new Set(results.map(r=>r.org))].sort(), kbns=[...new Set(results.map(r=>r.kbn))].sort();
+  const keep=(sel,arr)=>{const v=sel.value;sel.innerHTML='<option value="">すべて</option>'+arr.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')};
+  keep($('#fOrg'),orgs);keep($('#fKbn'),kbns);
+}
+function filteredList(){
+  const q=$('#q').value.trim(), o=$('#fOrg').value, k=$('#fKbn').value, l=$('#fLvl').value;
+  return results.filter(r=>(!q||r.name.replace(/\s/g,'').includes(q.replace(/\s/g,''))||r.no===q)&&(!o||r.org===o)&&(!k||r.kbn===k)&&(l===''||(l==='ge1'?r.lvl>=1:r.lvl===+l)));
+}
+function renderList(){
+  const rows=sortRows(filteredList(),sortState.list);
+  $('#listCount').textContent=rows.length+' 名';
+  $('#listTable').innerHTML=rows.length?tableHTML(rows,'list'):'<div class="empty">該当なし</div>';
+}
+function orgAgg(){
+  const fy=fyMonths(curMonth), upto=fy.slice(0,fy.indexOf(curMonth)+1);
+  const orgs=new Set();
+  upto.forEach(m=>{const M=store.months[m];if(M)for(const no in M.emps){const e=M.emps[no];if(!excluded(no,e))orgs.add(e.org)}});
+  return [...orgs].map(org=>{
+    const a=aggT(e=>e.org===org), rs=curRes.filter(r=>r.org===org);
+    return {org,n:rs.length,a,w1:rs.filter(r=>r.lvl===1).length,o45:rs.filter(r=>r.lvl===2).length,o80:rs.filter(r=>r.lvl===3).length,kyu:rs.reduce((x,r)=>x+r.kyushutsu,0)};
+  }).sort((x,y)=>y.a.mAvg-x.a.mAvg);
+}
+function renderOrg(){
+  const rows=orgAgg(); const mx=Math.max(...rows.map(o=>o.a.mAvg),1);
+  const col=(v,c)=>v?`<span class="${c}">${v}</span>`:'0';
+  let s=`<table><thead><tr><th rowspan="2">組織</th><th class="r" rowspan="2">人数</th><th colspan="2" class="sepL" style="text-align:center">単月（${mshort(curMonth)}）</th><th colspan="2" class="sepL" style="text-align:center">年間累計</th><th colspan="3" class="sepL" style="text-align:center">人数（${mshort(curMonth)}）</th><th class="r sepL" rowspan="2" title="対象月に休日出勤した日数を、部署全員分合計した日数">休日出勤<br>延べ日数</th></tr>
+  <tr><th class="sepL" style="width:200px;top:31px">1人あたり平均</th><th class="r" style="top:31px">部署合計</th><th class="r sepL" style="top:31px">1人あたり平均</th><th class="r" style="top:31px">部署合計</th><th class="r sepL" style="top:31px">注意<br>(${conf.warn}h超)</th><th class="r" style="top:31px">超過<br>(${conf.month}h超)</th><th class="r" style="top:31px">超過<br>(${conf.avg}h超)</th></tr></thead><tbody>`;
+  s+=rows.map(o=>`<tr><td>${esc(o.org)}</td><td class="r num">${o.n}</td><td class="sepL"><div style="display:flex;align-items:center;gap:8px"><svg width="110" height="12"><rect x="0" y="1" width="${Math.max(o.a.mAvg/mx*110,1)}" height="10" rx="2" fill="var(--s1)"/></svg><span class="num">${hm(o.a.mAvg)}</span></div></td><td class="r num">${hm(o.a.mSum)}</td><td class="r num sepL">${hm(o.a.yAvg)}</td><td class="r num">${hm(o.a.ySum)}</td><td class="r num sepL">${col(o.w1,'warnTxt')}</td><td class="r num">${col(o.o45,'redTxt')}</td><td class="r num">${col(o.o80,'overTxt')}</td><td class="r num sepL">${o.kyu}</td></tr>`).join('');
+  $('#orgTable').innerHTML=s+'</tbody></table>';
+}
+// ---------- 年度一覧（勤怠システムと同じ形式） ----------
+const metric='both';
+function mval(e){return e?e.ot+e.shk+e.hok:0}
+function fyLabel(){const fy=fyMonths(curMonth);const f=k=>k.slice(0,4)+'年'+k.slice(5)+'月度';return f(fy[0])+' 〜 '+f(fy[11])}
+function headBox(){
+  const h=v=>v+':00';
+  return `<table class="kbox"><tr><th>協定年度</th><th colspan="2">延長できる労働時間</th><th colspan="2">特別条項発動後の上限</th><th>協定時間超過上限</th></tr>
+  <tr><td>${fyLabel()}</td><td>(単月) ${h(conf.month)}</td><td>(年間) ${h(conf.year)}</td><td>(単月) ${h(conf.spMonth)} 未満</td><td>(年間) ${h(conf.spYear)}</td><td>${conf.spCount}回</td></tr></table>`;
+}
+function cellCls(v){if(v>conf.avg*60)return 'p';if(v>conf.month*60)return 'r';if(v>conf.warn*60)return 'w';return 'g'}
+function annualHTML(rows){
+  const fy=fyMonths(curMonth);
+  const data=new Map(rows.map(r=>{let tot=0;const cells=fy.map(m=>{const M=store.months[m];if(!M||m>curMonth)return null;if(!M.emps[r.no])return 'x';const v=mval(M.emps[r.no]);tot+=v;return v});return [r.no,{cells,tot}]}));
+  const st=annSort, key=k=>{if(k==='org')return r=>r.org+'\u0001'+String(r.no).padStart(8,'0');if(k==='no')return r=>+r.no||0;if(k==='name')return r=>r.name;if(k==='tot')return r=>data.get(r.no).tot;if(k==='cnt')return r=>r.cnt45;if(k==='lvl')return r=>r.retired?-1:r.lvl;if(k.startsWith('m'))return r=>{const v=data.get(r.no).cells[+k.slice(1)];return typeof v==='number'?v:-1};return r=>0};
+  const kf=key(st.k);
+  rows=rows.slice().sort((a,b)=>{const x=kf(a),y=kf(b);return (x>y?1:x<y?-1:0)*st.d});
+  const arrow=k=>st.k===k?(st.d>0?' ▲':' ▼'):'';
+  const th=(k,t,attrs='')=>`<th data-asort="${k}" ${attrs}>${t}${arrow(k)}</th>`;
+  let s=`<table class="ann"><colgroup><col style="width:98px"><col style="width:58px"><col style="width:128px">${'<col>'.repeat(12)}<col style="width:68px"><col style="width:68px"><col style="width:72px"></colgroup>
+  <thead><tr>${th('lvl','判定<br><span class="small">（'+mshort(curMonth)+'）</span>','rowspan="2"')}${th('no','従業員<br>番号','rowspan="2"')}${th('name','従業員名','rowspan="2"')}<th colspan="12">月間残業時間 ＋ 月間休日労働時間</th><th colspan="2">年間</th><th>特別条項</th></tr><tr>`;
+  s+=fy.map((m,i)=>th('m'+i,(+m.slice(5))+'月度',m===curMonth?'class="cur"':'')).join('');
+  s+=th('tot','合計')+'<th>残り</th>'+th('cnt','超過回数')+'</tr></thead><tbody>';
+  s+=rows.map(r=>{const d=data.get(r.no);const rem=conf.spYear*60-d.tot;
+    return `<tr ${r.retired?'class="ret"':`class="click" data-no="${esc(r.no)}"`}><td>${r.retired?'<span class="badge b-none">在籍なし</span>':badge(r.lvl)}</td><td class="r num">${esc(r.no)}</td><td title="${esc(r.name)}（${esc(r.org)}）">${esc(r.name)}</td>`+
+    d.cells.map(v=>v==null?'<td class="m"></td>':v==='x'?'<td class="m x"></td>':`<td class="m num ${cellCls(v)}">${hm2(v)}</td>`).join('')+
+    `<td class="r num"><b>${hm2(d.tot)}</b></td><td class="r num ${rem<0?'neg':''}">${rem<0?'-':''}${hm2(Math.abs(rem))}</td><td class="r num ${r.cnt45>0?'cnt':''}">${r.cnt45} / ${conf.spCount}回</td></tr>`}).join('');
+  return s+'</tbody></table>';
+}
+const hm2=m=>{m=Math.round(m||0);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+function annLegend(){
+  $$('.annLegend').forEach(el=>el.innerHTML=`<span><i style="background:var(--good-bg);border:1px solid var(--good)"></i>正常（${conf.warn}h以下）</span><span><i style="background:var(--warning-bg);border:1px solid var(--warning)"></i>注意（${conf.warn}h超）</span><span><i style="background:var(--critical-bg);border:1px solid var(--critical)"></i>超過（${conf.month}h超）</span><span><i style="background:var(--over-bg);border:1px solid var(--over)"></i>超過（${conf.avg}h超）</span><span><i style="background:var(--absent);border:1px solid var(--muted)"></i>在籍なし（退職など）</span>`);
+}
+function renderAnnualAdmin(){
+  annLegend();
+  $('#aHead').innerHTML=headBox();
+  const opts=orgPrefixes();const v=$('#aOrg').value;
+  const d0=Math.min(...opts.map(p=>p.split(SEP).length));
+  $('#aOrg').innerHTML='<option value="">すべて</option>'+opts.map(p=>{const parts=p.split(SEP);return `<option value="${esc(p)}" ${p===v?'selected':''}>${'　'.repeat(parts.length-d0)}${esc(parts[parts.length-1])}</option>`}).join('');
+  const o=$('#aOrg').value,l=$('#aLvl').value;
+  const rows=results.filter(r=>(!o||inOrg(r,o))&&(l===''||(!r.retired)&&(l==='ge1'?r.lvl>=1:l==='ge2'?r.lvl>=2:r.lvl===+l)));
+  $('#aCount').textContent=rows.filter(r=>!r.retired).length+' 名'+(rows.some(r=>r.retired)?`（ほか在籍なし ${rows.filter(r=>r.retired).length}名）`:'');
+  $('#aAnnual').innerHTML=rows.length?annualHTML(rows):'<div class="empty">該当なし</div>';
+}
+function renderDataInfo(){
+  const el=$('#dataInfo');
+  if(!lastUpdate){el.textContent='時間外・休日労働の上限チェック（データ未登録）';return}
+  const d=new Date(lastUpdate.at);const f=x=>`${x.getMonth()+1}/${x.getDate()} ${x.getHours()}:${String(x.getMinutes()).padStart(2,'0')}`;
+  const m=String(lastUpdate.fileName||'').match(/(20\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  const exp=m?`${+m[2]}/${+m[3]} ${+m[4]}:${m[5]}`:null;
+  const to=lastUpdate.dataTo?`${+lastUpdate.dataTo.slice(5,7)}/${+lastUpdate.dataTo.slice(8,10)}`:'';
+  el.innerHTML=`最新データ：<b>${to}分まで</b>　／　${exp?`勤怠システム出力 ${exp}　／　`:''}登録 ${f(d)}`;
+}
+
+// ---------- detail ----------
+async function openDetail(no){
+  const r=results.find(x=>x.no===no); if(!r) return;
+  const e0=store.months[curMonth].emps[no];
+  if(!e0.days){busy(true,'明細を取得中…');try{e0.days=await api('getDetail',token,no,curMonth)}catch(e){busy(false);if(e.message!=='SESSION_EXPIRED')toast(e.message);return}busy(false)}
+  r.days=e0.days;
+  const [Y,Mo]=curMonth.split('-').map(Number), last=new Date(Y,Mo,0).getDate();
+  const byDay={}; r.days.forEach(d=>byDay[d[0]]=d);
+  let cum=0; const pts=[];
+  for(let d=1;d<=last;d++){const x=byDay[d];if(x) cum+=x[4]+(conf.inclShotei?x[5]:0);pts.push([d,cum])}
+  const W=900,H=220,ml=44,mr=20,mt=14,mb=28,iw=W-ml-mr,ih=H-mt-mb;
+  const ymax=niceMax(Math.max(cum,conf.month*60)/60*1.05)*60;
+  const X=d=>ml+(d-1)/(last-1)*iw, Yv=v=>mt+ih-v/ymax*ih;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="時間外労働の日次累計">`;
+  ticks(ymax/60).forEach(t=>{const y=Yv(t*60);s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${ml-6}" y="${y+4}" font-size="11" fill="var(--muted)" text-anchor="end">${t}h</text>`});
+  for(let d=1;d<=last;d++){const dw=new Date(Y,Mo-1,d).getDay();if(d===1||d%5===0)s+=`<text x="${X(d)}" y="${H-8}" font-size="10" fill="var(--muted)" text-anchor="middle">${d}日</text>`;if(dw===0||dw===6)s+=`<rect x="${X(d)-iw/(last-1)/2}" y="${mt}" width="${iw/(last-1)}" height="${ih}" fill="var(--surface-2)" opacity=".6"/>`}
+  [[conf.warn,'注意'+conf.warn+'h'],[conf.month,'超過'+conf.month+'h'],[conf.avg,'超過'+conf.avg+'h'],[conf.spMonth,'上限'+conf.spMonth+'h']].forEach(([v,l])=>{if(v*60<=ymax){const y=Yv(v*60);s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="var(--ink-2)" stroke-dasharray="4 3"/><text x="${ml+6}" y="${v===conf.warn?y+12:y-4}" font-size="10" fill="var(--ink-2)">${l}</text>`}});
+  s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Yv(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="var(--s1)" stroke-width="2"/>`;
+  s+=`<circle cx="${X(last)}" cy="${Yv(cum)}" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/><text x="${X(last)-8}" y="${Yv(cum)-8}" font-size="12" fill="var(--ink)" text-anchor="end" class="num">${hm(cum)}</text>`;
+  s+=`<line id="xh" x1="0" x2="0" y1="${mt}" y2="${mt+ih}" stroke="var(--muted)" visibility="hidden"/><rect x="${ml}" y="${mt}" width="${iw}" height="${ih}" fill="transparent" id="hov"/></svg>`;
+  // monthly trend
+  const mk=Object.keys(store.months).sort().filter(m=>m<=curMonth).slice(-12);
+  let trend='';
+  if(mk.length>1){
+    const vals=mk.map(m=>{const e=store.months[m].emps[no];return e?Hof(e)+e.hok:0});
+    const tW=900,tH=180,tml=44,tmt=14,tmb=26,tiw=tW-tml-20,tih=tH-tmt-tmb,tmax=niceMax(Math.max(...vals,conf.month*60)/60)*60,bw=tiw/mk.length;
+    trend=`<h3 style="font-size:14px;margin:18px 0 4px">月別推移（時間外＋休日）</h3><svg viewBox="0 0 ${tW} ${tH}" width="100%">`;
+    ticks(tmax/60).forEach(t=>{const y=tmt+tih-t*60/tmax*tih;trend+=`<line x1="${tml}" x2="${tW-20}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${tml-6}" y="${y+4}" font-size="11" fill="var(--muted)" text-anchor="end">${t}h</text>`});
+    vals.forEach((v,i)=>{const h=v/tmax*tih,x=tml+i*bw+bw*.2,w=bw*.6;if(v>0)trend+=`<path d="${roundTop(x,tmt+tih-h,w,h,3)}" fill="var(--s1)"/>`;trend+=`<text x="${x+w/2}" y="${tmt+tih-h-4}" font-size="10" fill="var(--ink-2)" text-anchor="middle" class="num">${hm(v)}</text><text x="${x+w/2}" y="${tH-8}" font-size="11" fill="var(--muted)" text-anchor="middle">${mshort(mk[i])}</text>`});
+    const y45=tmt+tih-conf.month*60/tmax*tih; trend+=`<line x1="${tml}" x2="${tW-20}" y1="${y45}" y2="${y45}" stroke="var(--ink-2)" stroke-dasharray="4 3"/></svg>`;
+  }
+  const avgTxt=Object.keys(r.avgs).length?Object.entries(r.avgs).map(([k,v])=>`${k}か月 ${hm(v)}`).join('　'):'前月以前のデータが必要です';
+  const dayRows=r.days.slice().sort((a,b)=>a[0]-b[0]).map(d=>{const dw='日月火水木金土'[new Date(Y,Mo-1,d[0]).getDay()];return `<tr><td class="num">${Mo}/${d[0]}（${dw}）</td><td>${esc(d[1])}</td><td class="num">${esc(fmtT(d[2]))}〜${esc(fmtT(d[3]))}</td><td class="r num">${hm(d[4])}</td><td class="r num">${hm(d[5])}</td>${showHok?`<td class="r num">${hm(d[6])}</td>`:''}<td class="r num">${hm(d[7])}</td><td class="small">${esc(d[8])}</td></tr>`}).join('');
+  showModal(`<div class="mhead"><div><h2>${esc(r.name)} <span class="small">（${esc(r.no)}）</span></h2><div class="small">${esc(r.org)}　/　${esc(r.kbn)}　/　${mlabel(curMonth)}</div></div><div class="spacer"></div>${badge(r.lvl)}<button id="mclose">閉じる</button></div>
+  ${r.reasons.length?`<div class="alert" style="border-left-color:${LVL[r.lvl].col}">${esc(r.reasons.join(' / '))}</div>`:''}
+  <div class="kpis">
+    <div class="kpi"><div class="label">時間外計</div><div class="value num">${hm(r.H)}</div><div class="foot">残業 ${hm(r.ot)} ＋ 所定休日 ${hm(conf.inclShotei?r.shk:0)}</div></div>
+    <div class="kpi"><div class="label">時間外＋休日</div><div class="value num">${hm(r.T)}</div><div class="foot">上限 ${conf.spMonth}h未満</div></div>
+    <div class="kpi"><div class="label">${conf.month}hまでの残り</div><div class="value num" style="${r.remain<0?'color:var(--critical)':''}">${r.remain<0?'超過 ':''}${hm(Math.abs(r.remain))}</div><div class="foot">年度 ${r.cnt45}/${conf.spCount}回 適用</div></div>
+    <div class="kpi"><div class="label">年度累計（時間外）</div><div class="value num">${hm(r.yearH)}</div><div class="foot">原則${conf.year}h / 特別${conf.spYear}h</div></div>
+  </div>
+  <div class="small">2〜6か月平均（時間外＋休日）：${avgTxt}</div>
+  <h3 style="font-size:14px;margin:14px 0 4px">日次累計（時間外）</h3><div id="dchart">${s}</div>
+  ${trend}
+  <h3 style="font-size:14px;margin:18px 0 6px">時間外・休日労働のあった日</h3>
+  <div class="tablewrap" style="max-height:340px"><table><thead><tr><th>日付</th><th>勤務状況</th><th>実績</th><th class="r">残業</th><th class="r">所定休日</th>${showHok?'<th class="r">法定休日</th>':''}<th class="r">深夜</th><th>理由</th></tr></thead><tbody>${dayRows||'<tr><td colspan="8" class="empty">なし</td></tr>'}</tbody></table></div>`);
+  $('#mclose').onclick=()=>$('#modalBg').style.display='none';
+  const svg=$('#dchart svg'),hov=$('#hov'),xh=$('#xh');
+  hov.addEventListener('mousemove',ev=>{
+    const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const d=Math.max(1,Math.min(last,Math.round((p.x-ml)/iw*(last-1))+1));
+    xh.setAttribute('x1',X(d));xh.setAttribute('x2',X(d));xh.setAttribute('visibility','visible');
+    const x=byDay[d];showTip(ev,`<b>${Mo}/${d}</b><div class="row"><span>累計</span><span class="num">${hm(pts[d-1][1])}</span></div>${x?`<div class="row"><span>当日 残業</span><span class="num">${hm(x[4])}</span></div><div class="row"><span>当日 休日労働</span><span class="num">${hm(x[5]+x[6])}</span></div><div class="small">${esc(x[1])}</div>`:''}`);
+  });
+  hov.addEventListener('mouseleave',()=>{xh.setAttribute('visibility','hidden');hideTip()});
+}
+let modalLocked=false;
+function showModal(html,locked){modalLocked=!!locked;$('#modal').innerHTML=html;$('#modalBg').style.display='flex';$('#modalBg').scrollTop=0}
+$('#modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg'&&!modalLocked)e.currentTarget.style.display='none'});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modalLocked)$('#modalBg').style.display='none'});
+
+// ---------- svg helpers ----------
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));for(const m of[1,2,2.5,5,10])if(m*p>=v)return m*p;return 10*p}
+function ticks(max){const n=5,st=max/n;return Array.from({length:n+1},(_,i)=>+(i*st).toFixed(2))}
+function roundTop(x,y,w,h,r){r=Math.min(r,w/2,h);return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`}
+function roundRight(x,y,w,h,r){r=Math.min(r,w,h/2);return `M${x},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h-r}Q${x+w},${y+h} ${x+w-r},${y+h}H${x}Z`}
+const fmtT=s=>{const m=String(s||'').match(/^(\d{1,2}):(\d{2})/);if(!m)return s||'';const h=+m[1];return (h>=24?'翌'+(h-24):h)+':'+m[2]};
+const trunc=(s,n)=>s&&s.length>n?s.slice(0,n)+'…':s||'';
+function showTip(ev,html){const t=$('#tip');t.innerHTML=html;t.style.display='block';const w=t.offsetWidth,h=t.offsetHeight;let x=ev.clientX+14,y=ev.clientY+14;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y+h>innerHeight-8)y=ev.clientY-h-14;t.style.left=x+'px';t.style.top=y+'px'}
+function hideTip(){$('#tip').style.display='none'}
+function bindTips(root,fn,click){root.querySelectorAll('[data-i]').forEach(el=>{el.addEventListener('mousemove',ev=>showTip(ev,fn(el)));el.addEventListener('mouseleave',hideTip);if(click)el.addEventListener('click',()=>{hideTip();click(el)})})}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(()=>t.style.display='none',3500)}
+
+// ---------- export ----------
+function exportRows(src){
+  const head=['対象月','判定','従業員番号','氏名','組織','雇用区分','残業','所定休日労働',...(showHok?['法定休日労働']:[]),'時間外計','時間外+休日','時間外計(10進)','2-6か月平均最大','年度累計時間外',conf.month+'h超回数','休出日数','該当事由'];
+  const rows=sortRows((src||results).slice(),{k:'T',d:-1}).map(r=>[mlabel(curMonth),LVL[r.lvl].t,r.no,r.name,r.org,r.kbn,hm(r.ot),hm(r.shk),...(showHok?[hm(r.hok)]:[]),hm(r.H),hm(r.T),hdec(r.H),r.maxAvg==null?'':hm(r.maxAvg),hm(r.yearH),r.cnt45,r.kyushutsu,r.reasons.join(' / ')]);
+  return [head,...rows];
+}
+$('#btnExport').onclick=()=>{
+  if(!curMonth)return;
+  const csv=exportRows().map(r=>r.map(v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
+  try{const b=new Blob(['﻿'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='36協定レポート_'+curMonth+'.csv';document.body.appendChild(a);a.click();a.remove();toast('CSVを出力しました')}catch(e){toast('この環境ではダウンロードできません')}
+};
+
+// ---------- events ----------
+const fileIn=$('#file');
+$('#btnPick').onclick=()=>fileIn.click();
+fileIn.onchange=()=>{if(fileIn.files.length)loadFiles([...fileIn.files]);fileIn.value=''};
+const drop=$('#drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>{const f=[...e.dataTransfer.files];if(f.length)loadFiles(f)});
+
+$('#monthSel').onchange=e=>{curMonth=e.target.value;render()};
+function stepMonth(d){const ms=Object.keys(store.months).sort();const i=ms.indexOf(curMonth)+d;if(i>=0&&i<ms.length){curMonth=ms[i];render()}}
+$('#mPrev').onclick=()=>stepMonth(-1);$('#mNext').onclick=()=>stepMonth(1);
+try{new ResizeObserver(()=>document.documentElement.style.setProperty('--hdr',$('header').offsetHeight+'px')).observe($('header'))}catch(e){}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{curTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('hidden',v.id!=='v-'+curTab))});
+document.addEventListener('click',e=>{
+  const tr=e.target.closest('tr[data-no]');if(tr)openDetail(tr.dataset.no);
+});
+// settings
+const startSel=$('#cfStart');startSel.innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}月</option>`).join('');
+const F={cfStart:'start',cfInclShotei:'inclShotei',cfExclYakuin:'exclYakuin',cfExclNos:'exclNos',cfWarn:'warn',cfMonth:'month',cfYear:'year',cfSpMonth:'spMonth',cfSpYear:'spYear',cfSpCount:'spCount',cfAvg:'avg',cfAlert:'alert'};
+function fillConf(){for(const id in F){const el=document.getElementById(id),v=conf[F[id]];if(el.type==='checkbox')el.checked=!!v;else el.value=v}}
+fillConf();
+for(const id in F){document.getElementById(id).addEventListener('change',e=>{const el=e.target;let v=el.type==='checkbox'?el.checked:el.value;if(el.type==='number'||id==='cfStart')v=+v||DEFAULT_CONF[F[id]];conf[F[id]]=v;render();saveConfSoon()})}
+let confTimer=null;
+function saveConfSoon(){clearTimeout(confTimer);confTimer=setTimeout(async()=>{try{conf=Object.assign({},DEFAULT_CONF,await api('saveSettings',token,conf));toast('設定を保存しました')}catch(e){if(e.message!=='SESSION_EXPIRED')toast('設定を保存できませんでした：'+e.message)}},700)}
+$('#btnSettings').onclick=()=>$('#settingsCard').classList.toggle('hidden');
+$('#btnReset').onclick=()=>{conf=Object.assign({},DEFAULT_CONF);fillConf();render();saveConfSoon()};
+// ---------- 現場管理者ビュー ----------
+const SEP='\u3000';
+function orgPrefixes(){
+  const set=new Set();
+  results.forEach(r=>{const parts=r.org.split(/[\s\u3000]+/).filter(Boolean);for(let i=1;i<=parts.length;i++)set.add(parts.slice(0,i).join(SEP))});
+  return [...set].sort();
+}
+function inOrg(r,p){const o=r.org.split(/[\s\u3000]+/).filter(Boolean).join(SEP);return o===p||o.startsWith(p+SEP)}
+function genbaRows(){return gOrg?results.filter(r=>inOrg(r,gOrg)):[]}
+function renderGenba(){
+  const opts=orgPrefixes().filter(p=>!user||user.role==='人事'||!user.orgs.length||user.orgs.some(u=>p===u||p.startsWith(u+SEP)));
+  if(!opts.includes(gOrg)){const saved=lsGet('kyotei36_genba_org');gOrg=opts.includes(saved)?saved:(opts[0]||'')}
+  const d0=Math.min(...opts.map(p=>p.split(SEP).length));
+  $('#gOrg').innerHTML=opts.map(p=>{const parts=p.split(SEP);return `<option value="${esc(p)}" ${p===gOrg?'selected':''}>${'　'.repeat(parts.length-d0)}${esc(parts[parts.length-1])}</option>`}).join('');
+  const all=genbaRows();
+  const M=store.months[curMonth];
+  const last=new Date(+curMonth.slice(0,4),+curMonth.slice(5),0).getDate();
+  $('#gAlerts').innerHTML=M.maxDay<last?`<div class="alert">${mlabel(curMonth)}は${M.maxDay}日までのデータです（月の途中の値）。</div>`:'';
+  const now=all.filter(r=>!r.retired);
+  const c=[0,0,0,0];now.forEach(r=>c[r.lvl]++);
+  const a=aggT(e=>inOrg(e,gOrg));
+  const two=(x,y)=>`<div class="rows2"><div><span>単月</span><b class="num">${x}</b></div><div><span>年間累計</span><b class="num">${y}</b></div></div>`;
+  $('#gKpis').innerHTML=`
+    <div class="kpi"><div class="label">メンバー（${mshort(curMonth)}時点）</div><div class="value num">${now.length}<small>名</small></div><div class="foot">${esc(gOrg.split(SEP).slice(-1)[0]||'')}</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--over)"></span>超過（${conf.avg}h超）</div><div class="value num">${c[3]}<small>名</small></div><div class="foot">至急 人事へ報告</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--critical)"></span>超過（${conf.month}h超）</div><div class="value num">${c[2]}<small>名</small></div><div class="foot">年${conf.spCount}回まで</div></div>
+    <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
+    <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
+    <div class="kpi"><div class="label">部署合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>`;
+  annLegend();
+  $('#gHead').innerHTML=headBox();
+  const rows=all;
+  $('#gAnnual').innerHTML=rows.length?annualHTML(rows):'<div class="empty">この部署の対象者はいません</div>';
+  $('#gHelp').innerHTML=`<b>表の数字</b>：月ごとの「残業時間＋休日労働時間」です。<b>残り</b>：年間の上限（${conf.spYear}時間）までの残り時間。<b>超過回数</b>：月${conf.month}時間を超えた月の数（年${conf.spCount}回まで。1回以上で赤字）。灰色の月は在籍していない月（退職など）です。<br>
+    <b>1人あたり平均</b>：在籍者1人あたりの平均。年間累計は各月の1人あたり平均の合計です。<b>部署合計</b>：部署全員の合計。<br>
+    ${badge(0)} ${conf.warn}時間以下　${badge(1)} ${conf.warn}時間超　${badge(2)} ${conf.month}時間超（特別条項の適用）　${badge(3)} ${conf.avg}時間超、または上限に抵触（月${conf.spMonth}時間以上、2〜6か月平均${conf.avg}時間超、年${conf.spYear}時間超、${conf.month}時間超が年${conf.spCount + 1}回以上）`;
+}
+$('#gOrg').onchange=e=>{gOrg=e.target.value;lsSet('kyotei36_genba_org',gOrg);renderGenba()};
+['#aOrg','#aLvl'].forEach(x=>$(x).addEventListener('change',renderAnnualAdmin));
+document.addEventListener('click',e=>{const th=e.target.closest('th[data-asort]');if(!th)return;const k=th.dataset.asort;
+  if(annSort.k===k)annSort.d*=-1;else annSort={k,d:['org','no','name'].includes(k)?1:-1};renderAnnualAdmin();renderGenba()});
+let isAdmin=false;
+async function setMode(m,local){
+  if(user&&user.role!=='人事') m='genba';
+  mode=m==='genba'?'genba':'admin';document.body.dataset.mode=mode;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  $('#settingsCard').classList.add('hidden');
+}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+setMode('genba');
+// ---------- login / password ----------
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();$('#lErr').textContent='';
+  const no=$('#lNo').value.trim(),pw=$('#lPw').value;if(!no||!pw)return;
+  busy(true,'ログイン中…');
+  try{const res=await api('login',no,pw);try{if($('#lKeep').checked)localStorage.setItem('k36_no',no);else localStorage.removeItem('k36_no')}catch(e){}busy(false);await afterLogin(res)}
+  catch(err){busy(false);$('#lErr').textContent=err.message}
+});
+function askAdmin(){
+  return new Promise(res=>{
+    showModal(`<h2>管理者画面に切り替え</h2><p class="small">人事・労務管理者画面を開くには、専用パスワードを入力してください。</p>
+    <form class="form" id="admForm"><label>専用パスワード</label><input type="password" id="admPw" autocomplete="current-password" required>
+    <div class="err" id="admErr"></div><div style="display:flex;gap:8px"><button class="primary" type="submit">管理者画面を開く</button><button type="button" id="admCancel">キャンセル</button></div></form>`,true);
+    setTimeout(()=>$('#admPw').focus(),50);
+    $('#admCancel').onclick=()=>{modalLocked=false;$('#modalBg').style.display='none';res(false)};
+    $('#admForm').onsubmit=async e=>{e.preventDefault();busy(true,'確認中…');
+      try{await api('elevate',token,$('#admPw').value);modalLocked=false;$('#modalBg').style.display='none';res(true)}
+      catch(err){if(err.message==='SESSION_EXPIRED'){res(false);return}$('#admErr').textContent=err.message;$('#admPw').value=''}
+      finally{busy(false)}};
+  });
+}
+$('#btnLogout').onclick=async()=>{try{await api('logout',token)}catch(e){}showLogin('ログアウトしました。')};
+$('#btnPw').onclick=()=>openPwChange(false);
+function openPwChange(must){
+  showModal(`<h2>パスワードの変更</h2>${must?'<div class="alert" style="margin-top:10px">初回ログイン（または仮パスワード）のため、パスワードを変更してください。</div>':''}
+  <form class="form" id="pwForm"><label>現在のパスワード</label><input type="password" id="pOld" autocomplete="current-password" required>
+  <label>新しいパスワード（8文字以上・英字と数字を含む）</label><input type="password" id="pNew" autocomplete="new-password" required>
+  <label>新しいパスワード（確認）</label><input type="password" id="pNew2" autocomplete="new-password" required>
+  <div class="err" id="pErr"></div><div style="display:flex;gap:8px"><button class="primary" type="submit">変更する</button>${must?'':'<button type="button" id="pCancel">キャンセル</button>'}</div></form>`,must);
+  if(!must)$('#pCancel').onclick=()=>$('#modalBg').style.display='none';
+  $('#pwForm').onsubmit=async e=>{e.preventDefault();const a=$('#pOld').value,b=$('#pNew').value,c=$('#pNew2').value;
+    if(b!==c){$('#pErr').textContent='新しいパスワードが一致しません。';return}
+    if(b.length<8||!/[A-Za-z]/.test(b)||!/[0-9]/.test(b)){$('#pErr').textContent='8文字以上で、英字と数字を両方含めてください。';return}
+    busy(true);try{await api('changePassword',token,a,b);modalLocked=false;$('#modalBg').style.display='none';toast('パスワードを変更しました')}catch(err){$('#pErr').textContent=err.message}finally{busy(false)}};
+}
+$('#lForgot').onclick=()=>{
+  $('#login').style.display='none';
+  showModal(`<h2>パスワードの再発行</h2><p class="small">登録されている社員番号とメールアドレスを入力してください。一致した場合、仮パスワードをメールで送信します。</p>
+  <form class="form" id="rForm"><label>社員番号</label><input id="rNo" required><label>メールアドレス</label><input id="rMail" type="email" required>
+  <div class="err" id="rErr"></div><div style="display:flex;gap:8px"><button class="primary" type="submit">送信する</button><button type="button" id="rBack">ログイン画面へ戻る</button></div></form>`,true);
+  $('#rBack').onclick=()=>{modalLocked=false;$('#modalBg').style.display='none';showLogin()};
+  $('#rForm').onsubmit=async e=>{e.preventDefault();busy(true);try{const m=await api('requestReset',$('#rNo').value,$('#rMail').value);$('#rErr').style.color='var(--ink-2)';$('#rErr').textContent=m}catch(err){$('#rErr').textContent=err.message}finally{busy(false)}};
+};
+function confirmBox(title,msg,okLabel){
+  return new Promise(res=>{
+    showModal(`<h2>${esc(title)}</h2><p>${esc(msg)}</p><div style="display:flex;gap:8px"><button class="primary" id="cY">${esc(okLabel||'OK')}</button><button id="cN">キャンセル</button></div>`);
+    $('#cY').onclick=()=>{$('#modalBg').style.display='none';res(true)};
+    $('#cN').onclick=()=>{$('#modalBg').style.display='none';res(false)};
+  });
+}
+// ページを再読み込みしても、同じタブなら自動でログイン状態を復元（ログインの有効時間内のみ）
+(async()=>{
+  const t=ssGet();
+  if(!t){showLogin();return}
+  $('#login').style.display='none';busy(true,'読み込み中…');
+  try{token=t;const d=await api('getData',t);busy(false);await afterLogin({token:t,user:d.user,mustChange:false})}
+  catch(e){busy(false);showLogin()}
+})();
+})();
+</script>
+</body>
+</html>
