@@ -96,12 +96,12 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
 .spBars .l{font-size:11px;color:var(--ink-2);margin-top:3px;white-space:nowrap}
 @media (max-width:700px){.kpi.spc{grid-column:span 1}}
 @media (min-width:1200px){
-  #kpis{grid-template-columns:repeat(4,minmax(0,.8fr)) repeat(2,minmax(0,1.15fr)) minmax(0,1.45fr);gap:10px}
-  #kpis .kpi .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #kpis .kpi{padding:12px}
-  #kpis .kpi.spc{grid-column:auto}
-  #kpis .rows2 b{font-size:18px}
-  #kpis .spBars{gap:4px}
+  #kpis,#gKpis{grid-template-columns:repeat(4,minmax(0,.8fr)) repeat(2,minmax(0,1.15fr)) minmax(0,1.45fr);gap:10px}
+  :is(#kpis,#gKpis) .kpi .label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  :is(#kpis,#gKpis) .kpi{padding:12px}
+  :is(#kpis,#gKpis) .kpi.spc{grid-column:auto}
+  :is(#kpis,#gKpis) .rows2 b{font-size:18px}
+  :is(#kpis,#gKpis) .spBars{gap:4px}
 }
 #drop.over{border-color:var(--accent);background:var(--surface-2)}
 #drop strong{color:var(--ink)}
@@ -652,17 +652,17 @@ function renderSummary(){
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
     <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
     <div class="kpi"><div class="label">全体の合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>
-    ${spCountBox()}`;
-  bindSpTips($('#kpis'));
+    ${spCountBox(curRes,'admin')}`;
+  bindSpTips($('#kpis'),'admin');
   drawHist(); drawTop();
 }
 // 特別条項（月45h超）の発動回数ごとの人数（協定年度の起算月〜対象月、在籍者）
-let spGroups=[];
-function spCountBox(){
+const spGroupsBy={};
+function spCountBox(rows,key){
   const N=Math.max(1,+conf.spCount||6);
-  spGroups=Array.from({length:N},(_,i)=>({k:i+1,t:(i+1)+'回',rs:[]}));
+  const spGroups=spGroupsBy[key]=Array.from({length:N},(_,i)=>({k:i+1,t:(i+1)+'回',rs:[]}));
   const over={k:N+1,t:(N+1)+'回以上',rs:[]};
-  curRes.forEach(r=>{if(r.cnt45>N)over.rs.push(r);else if(r.cnt45>0)spGroups[r.cnt45-1].rs.push(r)});
+  rows.forEach(r=>{if(r.cnt45>N)over.rs.push(r);else if(r.cnt45>0)spGroups[r.cnt45-1].rs.push(r)});
   if(over.rs.length)spGroups.push(over);
   const mx=Math.max(1,...spGroups.map(g=>g.rs.length));
   const total=spGroups.reduce((x,g)=>x+g.rs.length,0);
@@ -672,7 +672,7 @@ function spCountBox(){
     <div class="spBars">${spGroups.map((g,i)=>{const n=g.rs.length;return `<div class="c" data-sp="${i}"><span class="n num ${n?'':'z'}">${n}</span><span class="bar" style="height:${n?Math.max(n/mx*36,4):2}px;background:${n?col(g):'var(--grid)'}"></span><span class="l" style="${g.k>N?'color:var(--over);font-weight:700':''}">${g.t}</span></div>`}).join('')}</div>
     <div class="foot">発動 ${total}名・残り1回以下 <b style="color:${near?'var(--critical)':'inherit'}">${near}名</b></div></div>`;
 }
-function bindSpTips(root){
+function bindSpTips(root,key){const spGroups=spGroupsBy[key]||[];
   root.querySelectorAll('[data-sp]').forEach(el=>{
     const g=spGroups[+el.dataset.sp];
     el.addEventListener('mousemove',ev=>showTip(ev,`<b>年度で${g.t}発動：${g.rs.length}名</b>${g.rs.length?'<div class="small" style="margin-top:4px">'+g.rs.slice(0,15).map(r=>esc(r.name)).join('、')+(g.rs.length>15?' ほか':'')+'</div>':''}`));
@@ -1002,7 +1002,9 @@ function renderGenba(){
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--critical)"></span>超過（${conf.month}h超）</div><div class="value num">${c[2]}<small>名</small></div><div class="foot">年${conf.spCount}回まで</div></div>
     <div class="kpi"><div class="label"><span class="dot" style="background:var(--warning)"></span>注意（${conf.warn}h超）</div><div class="value num">${c[1]}<small>名</small></div><div class="foot">残業の抑制を検討</div></div>
     <div class="kpi"><div class="label">1人あたり平均（残業＋休日）</div>${two(hm(a.mAvg),hm(a.yAvg))}</div>
-    <div class="kpi"><div class="label">部署合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>`;
+    <div class="kpi"><div class="label">部署合計（残業＋休日）</div>${two(hm(a.mSum),hm(a.ySum))}</div>
+    ${spCountBox(now,'genba')}`;
+  bindSpTips($('#gKpis'),'genba');
   annLegend();
   $('#gHead').innerHTML=headBox();
   const rows=all;
@@ -1086,4 +1088,3 @@ function confirmBox(title,msg,okLabel){
 </script>
 </body>
 </html>
-
