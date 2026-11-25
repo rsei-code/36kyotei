@@ -431,8 +431,9 @@ async function api(fn,...args){
   throw new Error(m.replace(/^Exception:\s*/,'').replace(/^Error:\s*/,''));
 }
 function busy(on,msg){$('#busyMsg').textContent=msg||'処理中…';$('#busy').style.display=on?'flex':'none'}
-async function reload(){
-  const d=await api('getData',token);
+async function reload(){applyData(await api('getData',token))}
+// 取得済みのデータを画面に反映（サーバーへの問い合わせはしない）
+function applyData(d){
   user=d.user;conf=Object.assign({},DEFAULT_CONF,d.conf);companyAvg=d.companyAvg||{};lastUpdate=d.lastUpdate||null;store={months:d.months||{}};
   fillConf();render();
 }
@@ -448,7 +449,8 @@ async function afterLogin(res){
   // ログイン画面から来たときは、画面が出来上がるまでログイン画面のボタンに進み具合を表示
   const fromLogin=$('#login').style.display!=='none';
   if(fromLogin) loginBusy('データを読み込み中…'); else busy(true,'データを読み込み中…');
-  try{await reload()}catch(e){if(e.message!=='SESSION_EXPIRED')toast(e.message)}
+  // すでにデータを受け取っていれば（再読み込み時、またはサーバーの login がデータも返す場合）もう一度取りに行かない
+  try{if(res.data)applyData(res.data);else await reload()}catch(e){if(e.message!=='SESSION_EXPIRED')toast(e.message)}
   finally{busy(false);if(fromLogin){loginBusy(null);if(token)$('#login').style.display='none'}}
   if(token&&res.mustChange) openPwChange(true);
 }
@@ -1081,7 +1083,7 @@ function confirmBox(title,msg,okLabel){
   const t=ssGet();
   if(!t){showLogin();return}
   $('#login').style.display='none';busy(true,'読み込み中…');
-  try{token=t;const d=await api('getData',t);busy(false);await afterLogin({token:t,user:d.user,mustChange:false})}
+  try{token=t;const d=await api('getData',t);busy(false);await afterLogin({token:t,user:d.user,mustChange:false,data:d})}
   catch(e){busy(false);showLogin()}
 })();
 })();
