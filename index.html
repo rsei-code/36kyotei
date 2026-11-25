@@ -176,6 +176,13 @@ svg text{font-family:inherit}
 .ann td.m.x{background:var(--absent)}
 .ann tr.ret td{color:var(--muted)}
 .b-none{background:var(--absent);border-color:var(--muted);color:var(--ink-2)}
+/* 判定の顔アイコン（協定年度の起算月から45h超が1度でもあれば怒り顔、なければ笑顔） */
+.face{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.face svg{display:block;width:26px;height:26px}
+.ann td.fc{text-align:center}
+.legend i.fi{width:auto;height:auto;border-radius:0}
+.legend i.fi svg{width:16px;height:16px;display:block}
+.note .face svg{width:18px;height:18px}
 .ann .cnt{color:var(--critical);font-weight:700}
 .ann td.org{font-size:12px;line-height:1.35}
 .ann td.org span{color:var(--ink-2)}
@@ -614,6 +621,12 @@ const LVL=[
   {cls:'b-critical',t:'超過(45h超)',col:'var(--critical)'},
   {cls:'b-over',t:'超過(80h超)',col:'var(--over)'}];
 const badge=l=>`<span class="badge ${LVL[l].cls}">${LVL[l].t}</span>`;
+// 顔アイコン：①怒り顔（年度内に45h超が1回以上）／②笑顔（0回）
+const FACE_ANGRY=`<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#9b0fd6"/><path d="M10.5 12.5l7 3M29.5 12.5l-7 3" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="14.5" cy="18" r="2.6" fill="#fff"/><circle cx="25.5" cy="18" r="2.6" fill="#fff"/><path d="M12.5 30c2-4 4.5-5.5 7.5-5.5s5.5 1.5 7.5 5.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const FACE_HAPPY=`<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#ff1f8e"/><path d="M10.5 17c1.2-3.2 5.8-3.2 7 0M22.5 17c1.2-3.2 5.8-3.2 7 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M10 22h20c0 6-4.5 10-10 10s-10-4-10-10z" fill="#fff"/></svg>`;
+// 協定年度の呼び名（起算月の年で「2026年度」）
+const fyName=()=>+fyMonths(curMonth)[0].slice(0,4)+'年度';
+const face=r=>{const t=r.cnt45>0?`${fyName()}中に${conf.month}h超が${r.cnt45}回あり`:`${fyName()}中に${conf.month}h超なし`;return `<span class="face" title="${t}" aria-label="${t}">${r.cnt45>0?FACE_ANGRY:FACE_HAPPY}</span>`};
 
 // ---------- render ----------
 function render(){
@@ -802,24 +815,24 @@ function cellCls(v){if(v>conf.avg*60)return 'p';if(v>conf.month*60)return 'r';if
 function annualHTML(rows){
   const fy=fyMonths(curMonth);
   const data=new Map(rows.map(r=>{let tot=0;const cells=fy.map(m=>{const M=store.months[m];if(!M||m>curMonth)return null;if(!M.emps[r.no])return 'x';const v=mval(M.emps[r.no]);tot+=v;return v});return [r.no,{cells,tot}]}));
-  const st=annSort, key=k=>{if(k==='org')return r=>r.org+'\u0001'+String(r.no).padStart(8,'0');if(k==='no')return r=>+r.no||0;if(k==='name')return r=>r.name;if(k==='tot')return r=>data.get(r.no).tot;if(k==='cnt')return r=>r.cnt45;if(k==='lvl')return r=>r.retired?-1:r.lvl;if(k.startsWith('m'))return r=>{const v=data.get(r.no).cells[+k.slice(1)];return typeof v==='number'?v:-1};return r=>0};
+  const st=annSort, key=k=>{if(k==='org')return r=>r.org+'\u0001'+String(r.no).padStart(8,'0');if(k==='no')return r=>+r.no||0;if(k==='name')return r=>r.name;if(k==='tot')return r=>data.get(r.no).tot;if(k==='cnt')return r=>r.cnt45;if(k==='lvl')return r=>r.retired?-1:(r.cnt45>0?1:0)*1000+r.cnt45;if(k.startsWith('m'))return r=>{const v=data.get(r.no).cells[+k.slice(1)];return typeof v==='number'?v:-1};return r=>0};
   const kf=key(st.k);
   rows=rows.slice().sort((a,b)=>{const x=kf(a),y=kf(b);return (x>y?1:x<y?-1:0)*st.d});
   const arrow=k=>st.k===k?(st.d>0?' ▲':' ▼'):'';
   const th=(k,t,attrs='')=>`<th data-asort="${k}" ${attrs}>${t}${arrow(k)}</th>`;
   let s=`<table class="ann"><colgroup><col style="width:98px"><col style="width:58px"><col style="width:128px">${'<col>'.repeat(12)}<col style="width:68px"><col style="width:68px"><col style="width:72px"></colgroup>
-  <thead><tr>${th('lvl','判定<br><span class="small">（'+mshort(curMonth)+'）</span>','rowspan="2"')}${th('no','従業員<br>番号','rowspan="2"')}${th('name','従業員名','rowspan="2"')}<th colspan="12">月間残業時間 ＋ 月間休日労働時間</th><th colspan="2">年間</th><th>特別条項</th></tr><tr>`;
+  <thead><tr>${th('lvl','判定<br><span class="small">（'+fyName()+'）</span>','rowspan="2"')}${th('no','従業員<br>番号','rowspan="2"')}${th('name','従業員名','rowspan="2"')}<th colspan="12">月間残業時間 ＋ 月間休日労働時間</th><th colspan="2">年間</th><th>特別条項</th></tr><tr>`;
   s+=fy.map((m,i)=>th('m'+i,(+m.slice(5))+'月度',m===curMonth?'class="cur"':'')).join('');
   s+=th('tot','合計')+'<th>残り</th>'+th('cnt','超過回数')+'</tr></thead><tbody>';
   s+=rows.map(r=>{const d=data.get(r.no);const rem=conf.spYear*60-d.tot;
-    return `<tr ${r.retired?'class="ret"':`class="click" data-no="${esc(r.no)}"`}><td>${r.retired?'<span class="badge b-none">在籍なし</span>':badge(r.lvl)}</td><td class="r num">${esc(r.no)}</td><td title="${esc(r.name)}（${esc(r.org)}）">${esc(r.name)}</td>`+
+    return `<tr ${r.retired?'class="ret"':`class="click" data-no="${esc(r.no)}"`}><td class="fc">${r.retired?'<span class="badge b-none">在籍なし</span>':face(r)}</td><td class="r num">${esc(r.no)}</td><td title="${esc(r.name)}（${esc(r.org)}）">${esc(r.name)}</td>`+
     d.cells.map(v=>v==null?'<td class="m"></td>':v==='x'?'<td class="m x"></td>':`<td class="m num ${cellCls(v)}">${hm2(v)}</td>`).join('')+
     `<td class="r num"><b>${hm2(d.tot)}</b></td><td class="r num ${rem<0?'neg':''}">${rem<0?'-':''}${hm2(Math.abs(rem))}</td><td class="r num ${r.cnt45>0?'cnt':''}">${r.cnt45} / ${conf.spCount}回</td></tr>`}).join('');
   return s+'</tbody></table>';
 }
 const hm2=m=>{m=Math.round(m||0);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 function annLegend(){
-  $$('.annLegend').forEach(el=>el.innerHTML=`<span><i style="background:var(--good-bg);border:1px solid var(--good)"></i>正常（${conf.warn}h以下）</span><span><i style="background:var(--warning-bg);border:1px solid var(--warning)"></i>注意（${conf.warn}h超）</span><span><i style="background:var(--critical-bg);border:1px solid var(--critical)"></i>超過（${conf.month}h超）</span><span><i style="background:var(--over-bg);border:1px solid var(--over)"></i>超過（${conf.avg}h超）</span><span><i style="background:var(--absent);border:1px solid var(--muted)"></i>在籍なし（退職など）</span>`);
+  $$('.annLegend').forEach(el=>el.innerHTML=`<span><i class="fi">${FACE_ANGRY}</i>${fyName()}中に${conf.month}h超あり</span><span><i class="fi">${FACE_HAPPY}</i>${fyName()}中に${conf.month}h超なし</span><span style="color:var(--grid)">｜</span><span><i style="background:var(--good-bg);border:1px solid var(--good)"></i>正常（${conf.warn}h以下）</span><span><i style="background:var(--warning-bg);border:1px solid var(--warning)"></i>注意（${conf.warn}h超）</span><span><i style="background:var(--critical-bg);border:1px solid var(--critical)"></i>超過（${conf.month}h超）</span><span><i style="background:var(--over-bg);border:1px solid var(--over)"></i>超過（${conf.avg}h超）</span><span><i style="background:var(--absent);border:1px solid var(--muted)"></i>在籍なし（退職など）</span>`);
 }
 function renderAnnualAdmin(){
   annLegend();
@@ -1011,7 +1024,8 @@ function renderGenba(){
   $('#gHead').innerHTML=headBox();
   const rows=all;
   $('#gAnnual').innerHTML=rows.length?annualHTML(rows):'<div class="empty">この部署の対象者はいません</div>';
-  $('#gHelp').innerHTML=`<b>表の数字</b>：月ごとの「残業時間＋休日労働時間」です。<b>残り</b>：年間の上限（${conf.spYear}時間）までの残り時間。<b>超過回数</b>：月${conf.month}時間を超えた月の数（年${conf.spCount}回まで。1回以上で赤字）。灰色の月は在籍していない月（退職など）です。<br>
+  $('#gHelp').innerHTML=`<b>判定の顔</b>：<span class="face">${FACE_ANGRY}</span> ${fyName()}中に月${conf.month}時間超が1度でもある人　<span class="face">${FACE_HAPPY}</span> ${fyName()}中に1度もない人<br>
+    <b>表の数字</b>：月ごとの「残業時間＋休日労働時間」です。<b>残り</b>：年間の上限（${conf.spYear}時間）までの残り時間。<b>超過回数</b>：月${conf.month}時間を超えた月の数（年${conf.spCount}回まで。1回以上で赤字）。灰色の月は在籍していない月（退職など）です。<br>
     <b>1人あたり平均</b>：在籍者1人あたりの平均。年間累計は各月の1人あたり平均の合計です。<b>部署合計</b>：部署全員の合計。<br>
     ${badge(0)} ${conf.warn}時間以下　${badge(1)} ${conf.warn}時間超　${badge(2)} ${conf.month}時間超（特別条項の適用）　${badge(3)} ${conf.avg}時間超、または上限に抵触（月${conf.spMonth}時間以上、2〜6か月平均${conf.avg}時間超、年${conf.spYear}時間超、${conf.month}時間超が年${conf.spCount + 1}回以上）`;
 }
